@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Exchange {
@@ -16,7 +16,7 @@ struct Precision {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ExchangeRates {
-        CHF: f64,
-        GBP: f64,
-        USD: f64,
+    CHF: f64,
+    GBP: f64,
+    USD: f64,
 }
