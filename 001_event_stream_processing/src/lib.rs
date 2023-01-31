@@ -2,12 +2,11 @@ mod request;
 mod response;
 
 use request::AzRequest;
-use reqwest::{ClientBuilder, Error};
+use reqwest::{Error};
 use response::Exchange;
 
-use azure_core::error::{ErrorKind, ResultExt};
 use azure_storage::prelude::*;
-use azure_storage_blobs::{blob::operations::PutBlockBlobResponse, prelude::*};
+use azure_storage_blobs::prelude::*;
 
 // This function calls the API and returns the result formatted as a struct (Exchange, JSON)
 // - The API accepts a start_date and end_date parameter in the format YYYY-MM-DD
@@ -38,10 +37,9 @@ pub async fn request_data(start_date: &str, end_date: &str) -> Result<Exchange, 
 // - The function uses the azure_sdk_for_rust crate
 // - The function uses the azure_key.json file for necessary details
 pub async fn push_data() -> azure_core::Result<()> {
-    // TODO: Identify way to move these imports to the top of the file
-    use azure_storage::prelude::*;
-    use azure_storage_blobs::prelude::*;
-
+    
+    // Temporary: Read a saved response from a file
+    // This is to avoid hitting the API limit early on
     let blob_body = std::fs::read("example_response.json").unwrap();
 
     // Retrieve mandatory details from json file
@@ -57,12 +55,6 @@ pub async fn push_data() -> azure_core::Result<()> {
     let storage_credentials = StorageCredentials::Key(account.clone(), key);
     let blob_client =
         ClientBuilder::new(account, storage_credentials).blob_client(&container, blob_name);
-
-    // Create a block blob and upload it
-    blob_client
-        .put_block_blob("hello world")
-        .content_type("text/plain")
-        .await?;
 
     // Create a Blob to store file
     // TODO: As of now there is no way to receive the response status; Contribute?
@@ -81,10 +73,52 @@ fn get_api_key() -> String {
     String::from_utf8(std::fs::read("api_key.json").unwrap()).unwrap()
 }
 
+// Read the Azure details from a file
 fn get_azure_details() -> Result<AzRequest, Error> {
     // read the azure details from a file and store them in a vector
     let azure_details =
         serde_json::from_str::<AzRequest>(&std::fs::read_to_string("azure_key.json").unwrap())
             .unwrap();
     Ok(azure_details)
+}
+
+// --------------------
+// Begin of test section
+// --------------------
+
+// Test the pull/push functions (request_data and push_data)
+// - The functions are tested by calling them and checking if the result is Ok
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_request_data() {
+        let result = request_data("2023-01-01", "2023-01-28").await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_push_data() {
+        let result = push_data().await;
+        assert!(result.is_ok());
+    }
+}
+
+// Test the get_api_key function
+// - The API key is stored in a file and read by the function
+// - The returned value should be a string
+#[test]
+fn test_get_api_key() {
+    let result = get_api_key();
+    assert!(result.is_ascii());
+}
+
+// Test the get_azure_details function
+// - The Azure details are stored in a file and read by the function
+// - The file should be read successfully
+#[test]
+fn test_get_azure_details() {
+    let result = get_azure_details();
+    assert!(result.is_ok());
 }
