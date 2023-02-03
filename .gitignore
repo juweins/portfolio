@@ -1,4 +1,9 @@
 ## Rust specific files
 Cargo.lock
 target
-api_key.json
+
+## exclude all dev-key files (security)
+*key.json
+
+## exclude kafka server directory
+kafka_*
