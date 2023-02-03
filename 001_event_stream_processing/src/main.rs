@@ -1,6 +1,6 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
 
-use exchange_stream::{push_data, request_data};
+use exchange_stream::{push_data,push_to_kafka, request_data};
 
 #[tokio::main]
 async fn main() {
@@ -8,7 +8,7 @@ async fn main() {
     let start_date = "2023-01-01";
     let end_date = "2023-01-28";
 
-    let result = push_data();
+    let result = push_to_kafka("exchangerates").await;
     println!("Success.");
     // Store the result of the request in variable result
     // let result = request_data(start_date, end_date);

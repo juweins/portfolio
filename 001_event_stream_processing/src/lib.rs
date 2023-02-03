@@ -1,8 +1,16 @@
 mod request;
 mod response;
+mod config;
 
-use request::AzRequest;
+use std::time::Duration;
+use log::info;
+
+use rdkafka::producer::{FutureProducer, FutureRecord};
+use rdkafka::{ClientConfig};
 use reqwest::{Error};
+
+use config::KafkaConfig;
+use request::AzRequest;
 use response::Exchange;
 
 use azure_storage::prelude::*;
@@ -11,7 +19,6 @@ use azure_storage_blobs::prelude::*;
 // This function calls the API and returns the result formatted as a struct (Exchange, JSON)
 // - The API accepts a start_date and end_date parameter in the format YYYY-MM-DD
 // TODO: Make the symbols dynamic by wrapping in a CLI argument
-
 pub async fn request_data(start_date: &str, end_date: &str) -> Result<Exchange, Error> {
     // TODO: URL builder for dynamic base currency and retrieved symbols
     let request_url = format!("https://api.apilayer.com/exchangerates_data/timeseries?start_date={}&end_date={}&base=EUR&symbols=CHF,GBP,USD", start_date, end_date);
@@ -82,6 +89,55 @@ fn get_azure_details() -> Result<AzRequest, Error> {
     Ok(azure_details)
 }
 
+// Take API response and push it to (local) Kafka
+// - The function uses the rdkafka crate
+// - The function uses the kafka_key.json file for necessary details
+// TODO: Explode the function into smaller parts
+pub async fn push_to_kafka(topic_name: &str) -> Result<(), Error> {
+
+    // read the kafka details from a file and store them in a vector
+    let kafka_details = get_kafka_details().unwrap();
+
+    // Assign details to variables
+    let bootstrap_servers = kafka_details.bootstrap_servers;
+    let group_id = kafka_details.group_id;
+    let message_timeout_ms = kafka_details.message_timeout_ms;
+
+    // Create a new Kafka producer
+    let producer: &FutureProducer = &ClientConfig::new()
+        .set("bootstrap.servers", &bootstrap_servers)
+        .set("group.id", &group_id)
+        .set("message.timeout.ms", &message_timeout_ms.to_string())
+        .create()
+        .expect("Error: Failed to create Kafka producer");
+
+    // Temporary: Read a saved response from a file
+    // This is to avoid hitting the API limit early on
+    let response_body = std::fs::read("example_response.json").unwrap();
+
+    // Create a new record
+    let record = FutureRecord::to(topic_name)
+        .payload(&response_body)
+        .key("key");
+    
+    // Send the record
+    let delivery_status = producer.send(record, Duration::from_secs(0)).await;
+    println!("Delivery status: {:?}", delivery_status);
+
+    Ok(())
+
+}
+
+// Read the Kafka details from a file
+// - returns a KafkaConfig struct
+fn get_kafka_details() -> Result<KafkaConfig, Error> {
+    // read the kafka details from a file and store them in a vector
+    let kafka_details =
+        serde_json::from_str::<KafkaConfig>(&std::fs::read_to_string("kafka_key.json").unwrap())
+            .unwrap();
+    Ok(kafka_details)
+}
+
 // --------------------
 // Begin of test section
 // --------------------
@@ -103,7 +159,19 @@ mod tests {
         let result = push_data().await;
         assert!(result.is_ok());
     }
+
+    #[tokio::test]
+    async fn test_push_to_kafka() {
+        let result = push_to_kafka("test").await;
+        assert!(result.is_ok());
+    }
 }
+
+// --------------------
+// Integration tests
+// --------------------
+// Unit tests
+// --------------------
 
 // Test the get_api_key function
 // - The API key is stored in a file and read by the function
@@ -120,5 +188,14 @@ fn test_get_api_key() {
 #[test]
 fn test_get_azure_details() {
     let result = get_azure_details();
+    assert!(result.is_ok());
+}
+
+// Test the get_kafka_details function
+// - The Kafka details are stored in a file and read by the function
+// - The file should be read successfully
+#[test]
+fn test_get_kafka_details() {
+    let result = get_kafka_details();
     assert!(result.is_ok());
 }
