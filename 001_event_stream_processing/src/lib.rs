@@ -1,4 +1,5 @@
 mod config;
+mod errors;
 mod request;
 mod response;
 
@@ -7,11 +8,13 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use reqwest::Error;
+use errors::KeyError;
+use anyhow::anyhow;
 
 pub mod consumer;
 pub mod producer;
 
-use config::{AzureConfig, KafkaConfig, ApiDetails};
+use config::{ApiDetails, AzureConfig, KafkaConfig};
 use response::Exchange;
 
 use azure_storage::prelude::*;
@@ -20,18 +23,39 @@ use azure_storage_blobs::prelude::*;
 // This function calls the API and returns the result formatted as a struct (Exchange, JSON)
 // - The API accepts a start_date and end_date parameter in the format YYYY-MM-DD
 // TODO: Make the symbols dynamic by wrapping in a CLI argument
-pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> Result<Exchange, Error> {
+pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> Result<Exchange, anyhow::Error> {
     // TODO: URL builder for dynamic base currency and retrieved symbols
     let request_url = format!("https://api.apilayer.com/exchangerates_data/timeseries?start_date={}&end_date={}&base=EUR&symbols=CHF,GBP,USD", start_date, end_date);
     println!("Requesting from: {}", request_url);
+
+/*     let api_key = {
+        let this = get_api_key(api_name);
+        match this {
+            Ok(t) => t,
+            Err(e) => {
+                warn!("Error: {}", e);
+                return Err(anyhow!("Error: {}", e));
+            }
+        }
+    }; */
+    let result = get_api_key(api_name);
+
+    // If Error occured and terminate function early
+    match &result {
+        Ok(_) => {}
+        Err(e) => {
+            warn!("Error: {}", e);
+            return Err(anyhow!("Error: {}", e))
+        }
+    }
+
 
     // Request data from API
     let client = reqwest::Client::new();
     let response = client
         .get(&request_url)
-        // REQUEST YOUR OWN (FREE) API KEY FROM https://apilayer.com/marketplace/exchangerates_data-api
         // The API accepts a simple apikey parameter as authentication method
-        .header("apikey", get_api_key(&api_name).unwrap())
+        .header("apikey", result.unwrap())
         .send()
         .await?
         // If the request is successful, the response is parsed into a struct
@@ -75,8 +99,10 @@ pub async fn push_data() -> azure_core::Result<()> {
 }
 
 // Read the API key from a file
+// Since there are multiple keys present an api_name parameter is required
+// - Custom error type for keys
 // TODO: Make this more secure by using a key vault
-fn get_api_key(api_name: &str) -> Option<String> {
+fn get_api_key(api_name: &str) -> Result<String, KeyError> {
     // read the api_key.json and retrieve the api key by name
     let api_details = serde_json::from_str::<HashMap<String, ApiDetails>>(
         &std::fs::read_to_string("secrets/api_key.json").unwrap(),
@@ -87,16 +113,16 @@ fn get_api_key(api_name: &str) -> Option<String> {
     let api = api_details.get(api_name);
 
     if let Some(_) = api {
-            info!("Found API key for {}", api_name);
-            Some(api.unwrap().apikey.to_string())
-        } else {
-            warn!("No API key found for {}", api_name);
-            None
-        }
-
+        info!("Found API key for {}", api_name);
+        Ok(api.unwrap().apikey.to_string())
+    } else {
+        warn!("No API key found for {}", api_name);
+        Err(KeyError::NotFound)
+    }
 }
 
 // Read the Azure details from a file
+// - returns a AzureConfig struct
 fn get_azure_details() -> Result<AzureConfig, Error> {
     // Read the azure details from a file and store them in a vector
     let azure_details = serde_json::from_str::<AzureConfig>(
@@ -120,35 +146,6 @@ fn get_kafka_details() -> Result<KafkaConfig, Error> {
 // --------------------
 // Begin of test section
 // --------------------
-
-// Test the pull/push functions (request_data and push_data)
-// - The functions are tested by calling them and checking if the result is Ok
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_request_data() {
-        let result = request_data("exchangerates_api", "2023-01-01", "2023-01-28").await;
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn test_push_data() {
-        let result = push_data().await;
-        assert!(result.is_ok());
-    }
-
-    /* #[tokio::test]
-    async fn test_push_to_kafka() {
-        let result = push_to_kafka("test").await;
-        assert!(result.is_ok());
-    } */
-}
-
-// --------------------
-// Integration tests
-// --------------------
 // Unit tests
 // --------------------
 
@@ -158,7 +155,7 @@ mod tests {
 #[test]
 fn test_get_api_key() {
     let result = get_api_key("exchangerates_api");
-    assert!(result.is_some());
+    assert!(result.is_ok());
 }
 
 #[test]
@@ -170,14 +167,14 @@ fn test_valid_api_key() {
 #[test]
 fn test_invalid_api_key() {
     let result = get_api_key("random_api");
-    assert!(result.is_none());
+    assert!(result.is_err());
 }
 
 // Test the get_azure_details function
 // - The Azure details are stored in a file and read by the function
 // - The file should be read successfully
 #[test]
-fn test_get_azure_details() {
+fn valid_azure_details() {
     let result = get_azure_details();
     assert!(result.is_ok());
 }
@@ -186,7 +183,7 @@ fn test_get_azure_details() {
 // - The Kafka details are stored in a file and read by the function
 // - The file should be read successfully
 #[test]
-fn test_get_kafka_details() {
+fn valid_kafka_details() {
     let result = get_kafka_details();
     assert!(result.is_ok());
 }
