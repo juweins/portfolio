@@ -1,9 +1,8 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
 mod consumer;
 
-use exchange_stream::{push_data, request_data};
 use exchange_stream::producer::push_to_kafka;
-
+use exchange_stream::{push_data, request_data};
 
 #[tokio::main]
 async fn main() {
