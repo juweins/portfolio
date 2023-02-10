@@ -5,12 +5,12 @@ mod config;
 use std::time::Duration;
 use log::info;
 
-use rdkafka::producer::{FutureProducer, FutureRecord};
-use rdkafka::{ClientConfig};
 use reqwest::{Error};
 
-use config::KafkaConfig;
-use request::AzRequest;
+pub mod consumer;
+pub mod producer;
+
+use config::{KafkaConfig, AzureConfig};
 use response::Exchange;
 
 use azure_storage::prelude::*;
@@ -77,55 +77,16 @@ pub async fn push_data() -> azure_core::Result<()> {
 // Read the API key from a file
 // TODO: Make this more secure by using a key vault
 fn get_api_key() -> String {
-    String::from_utf8(std::fs::read("api_key.json").unwrap()).unwrap()
+    String::from_utf8(std::fs::read("secrets/api_key.json").unwrap()).unwrap()
 }
 
 // Read the Azure details from a file
-fn get_azure_details() -> Result<AzRequest, Error> {
+fn get_azure_details() -> Result<AzureConfig, Error> {
     // read the azure details from a file and store them in a vector
     let azure_details =
-        serde_json::from_str::<AzRequest>(&std::fs::read_to_string("azure_key.json").unwrap())
+        serde_json::from_str::<AzureConfig>(&std::fs::read_to_string("secrets/azure_key.json").unwrap())
             .unwrap();
     Ok(azure_details)
-}
-
-// Take API response and push it to (local) Kafka
-// - The function uses the rdkafka crate
-// - The function uses the kafka_key.json file for necessary details
-// TODO: Explode the function into smaller parts
-pub async fn push_to_kafka(topic_name: &str) -> Result<(), Error> {
-
-    // read the kafka details from a file and store them in a vector
-    let kafka_details = get_kafka_details().unwrap();
-
-    // Assign details to variables
-    let bootstrap_servers = kafka_details.bootstrap_servers;
-    let group_id = kafka_details.group_id;
-    let message_timeout_ms = kafka_details.message_timeout_ms;
-
-    // Create a new Kafka producer
-    let producer: &FutureProducer = &ClientConfig::new()
-        .set("bootstrap.servers", &bootstrap_servers)
-        .set("group.id", &group_id)
-        .set("message.timeout.ms", &message_timeout_ms.to_string())
-        .create()
-        .expect("Error: Failed to create Kafka producer");
-
-    // Temporary: Read a saved response from a file
-    // This is to avoid hitting the API limit early on
-    let response_body = std::fs::read("example_response.json").unwrap();
-
-    // Create a new record
-    let record = FutureRecord::to(topic_name)
-        .payload(&response_body)
-        .key("key");
-    
-    // Send the record
-    let delivery_status = producer.send(record, Duration::from_secs(0)).await;
-    println!("Delivery status: {:?}", delivery_status);
-
-    Ok(())
-
 }
 
 // Read the Kafka details from a file
@@ -133,7 +94,7 @@ pub async fn push_to_kafka(topic_name: &str) -> Result<(), Error> {
 fn get_kafka_details() -> Result<KafkaConfig, Error> {
     // read the kafka details from a file and store them in a vector
     let kafka_details =
-        serde_json::from_str::<KafkaConfig>(&std::fs::read_to_string("kafka_key.json").unwrap())
+        serde_json::from_str::<KafkaConfig>(&std::fs::read_to_string("secrets/kafka_key.json").unwrap())
             .unwrap();
     Ok(kafka_details)
 }
@@ -160,11 +121,11 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    #[tokio::test]
+    /* #[tokio::test]
     async fn test_push_to_kafka() {
         let result = push_to_kafka("test").await;
         assert!(result.is_ok());
-    }
+    } */
 }
 
 // --------------------

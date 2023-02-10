@@ -8,3 +8,11 @@ pub struct KafkaConfig {
     pub group_id: String,
     pub message_timeout_ms: u32,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AzureConfig {
+    pub storage_account_name: String,
+    pub storage_account_key: String,
+    pub storage_container: String,
+    pub storage_blob_name: String,
+}
