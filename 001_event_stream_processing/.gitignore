@@ -1,0 +1,4 @@
+# exclude development files
+secrets/api_key.json
+secrets/azure_key.json
+secrets/kafka_key.json

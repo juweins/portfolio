@@ -3,7 +3,9 @@ Cargo.lock
 target
 
 ## exclude all dev-key files (security)
-*key.json
+
 
 ## exclude kafka server directory
 kafka_*
+
+!UWwQ&h8CAFQ
