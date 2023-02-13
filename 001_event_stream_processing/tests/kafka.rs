@@ -9,10 +9,16 @@
 #[cfg(test)]
 mod tests {
     use exchange_stream::producer::push_to_kafka;
+    use exchange_stream::consumer::read_from_kafka;
 
     #[tokio::test]
     async fn test_push_to_kafka() {
         let result = push_to_kafka("test").await;
+        assert!(result.is_ok());
+    }
+
+    async fn test_read_from_kafka() {
+        let result = read_from_kafka("test").await;
         assert!(result.is_ok());
     }
 }
