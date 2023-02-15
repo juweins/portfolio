@@ -6,7 +6,7 @@ use std::borrow::Borrow;
 
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
-use rdkafka::consumer::{StreamConsumer,Consumer, CommitMode};
+use rdkafka::consumer::{BaseConsumer,Consumer, CommitMode};
 
 use crate::get_kafka_details;
 
@@ -22,17 +22,17 @@ pub trait ToOwned {
 }
 
 // implement the trait for the consumer
-impl ToOwned for StreamConsumer {
+impl ToOwned for BaseConsumer {
     // The resulting type after obtaining ownership.
-    type Owned = StreamConsumer;
+    type Owned = BaseConsumer;
 
     // the function that clones the consumer
-    fn to_owned(&self) -> StreamConsumer {
+    fn to_owned(&self) -> BaseConsumer {
         self.to_owned()
     }
 }
 
-pub async fn new_kafka_consumer() -> StreamConsumer {
+pub async fn new_kafka_consumer() -> BaseConsumer {
     // read the kafka details from a file and store them in a vector
     let kafka_details = get_kafka_details().unwrap();
 
@@ -42,10 +42,11 @@ pub async fn new_kafka_consumer() -> StreamConsumer {
     let message_timeout_ms = kafka_details.message_timeout_ms;
 
     // Create a new Kafka consumer (if not already existing)
-    let consumer: &StreamConsumer = &ClientConfig::new()
+    let consumer: &BaseConsumer = &ClientConfig::new()
         .set("bootstrap.servers", &bootstrap_servers)
         .set("group.id", &group_id)
         .set("message.timeout.ms", &message_timeout_ms.to_string())
+        .set("enable.auto.commit", "true")
         .create()
         .expect("Error: Failed to create Kafka consumer");
     
