@@ -22,24 +22,15 @@ use response::Exchange;
 use azure_storage::prelude::*;
 use azure_storage_blobs::prelude::*;
 
-// This function calls the API and returns the result formatted as a struct (Exchange, JSON)
-// - The API accepts a start_date and end_date parameter in the format YYYY-MM-DD
 // TODO: Make the symbols dynamic by wrapping in a CLI argument
+/// Calls the API via HTTP Request
+/// - 
+/// - Returns the result formatted as a API specific struct (Exchange, JSON)
 pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> Result<Exchange, anyhow::Error> {
     // TODO: URL builder for dynamic base currency and retrieved symbols
     let request_url = format!("https://api.apilayer.com/exchangerates_data/timeseries?start_date={}&end_date={}&base=EUR&symbols=CHF,GBP,USD", start_date, end_date);
     println!("Requesting from: {}", request_url);
 
-/*     let api_key = {
-        let this = get_api_key(api_name);
-        match this {
-            Ok(t) => t,
-            Err(e) => {
-                warn!("Error: {}", e);
-                return Err(anyhow!("Error: {}", e));
-            }
-        }
-    }; */
     let result = get_api_key(api_name);
 
     // If Error occured and terminate function early
@@ -47,10 +38,9 @@ pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> R
         Ok(_) => {}
         Err(e) => {
             warn!("Error: {}", e);
-            return Err(anyhow!("Error: {}", e))
+            return Err(anyhow!("Error parsing key for {}: {}",api_name, e))
         }
     }
-
 
     // Request data from API
     let client = reqwest::Client::new();
@@ -67,10 +57,12 @@ pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> R
     Ok(response)
 }
 
-// This function pushes the result of the API request to Azure Blob Storage
-// - The function uses the azure_sdk_for_rust crate
-// - The function uses the azure_key.json file for necessary details
-pub async fn push_data() -> azure_core::Result<()> {
+/// Pushes a file to Azure Blob Storage
+/// - Establishes a connection to Azure Blob Storage via azure_key.json
+/// - Reads the file to be pushed from the file system
+/// - Pushes the file to Azure Blob Storage
+/// - Returns a Result with the status of the operation
+pub async fn push_to_azure() -> azure_core::Result<()> {
     // Temporary: Read a saved response from a file
     // This is to avoid hitting the API limit early on
     let blob_body = std::fs::read("example_response.json").unwrap();

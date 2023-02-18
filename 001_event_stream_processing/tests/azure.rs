@@ -11,7 +11,7 @@
 #[cfg(test)]
 mod tests {
 
-    use exchange::{push_data, request_data};
+    use exchange::{push_to_azure, request_data};
 
     #[tokio::test]
     async fn test_request_data() {
@@ -21,7 +21,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_push_data() {
-        let result = push_data().await;
+        let result = push_to_azure().await;
         assert!(result.is_ok());
     }
 }

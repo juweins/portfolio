@@ -1,7 +1,7 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
 use exchange::producer::push_to_kafka;
 use exchange::consumer::read_from_kafka;
-use exchange::{push_data, request_data};
+use exchange::{push_to_azure, request_data};
 use exchange::cli::{Cli, Command};
 
 
@@ -46,7 +46,7 @@ async fn main() {
         },
         Command::Write => {
             println!("Writer selected");
-            let result = push_data().await;
+            let result = push_to_azure().await;
 
             match result {
                 Ok(_) => info!("Data pushed to Azure Blob Storage"),
