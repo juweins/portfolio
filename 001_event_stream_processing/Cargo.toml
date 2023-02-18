@@ -1,15 +1,16 @@
 [package]
-name = "exchange-stream"
-version = "0.2.0"
+name = "exchange"
+version = "0.3.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0"
-azure_core = "0.8"
-azure_storage = "0.9"
-azure_storage_blobs = "0.9"
+azure_core = "0.10"
+azure_storage = "0.10"
+azure_storage_blobs = "0.10"
+clap = { version="4.1.4", features=["derive"] }
 futures = "0.3"
 log = "0.4"
 rdkafka = "0.29"

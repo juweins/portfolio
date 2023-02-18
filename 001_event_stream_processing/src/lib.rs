@@ -11,6 +11,7 @@ use reqwest::Error;
 use errors::KeyError;
 use anyhow::anyhow;
 
+pub mod cli;
 pub mod client;
 pub mod consumer;
 pub mod producer;
