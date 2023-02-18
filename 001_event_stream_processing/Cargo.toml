@@ -1,6 +1,6 @@
 [package]
 name = "exchange"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -21,7 +21,7 @@ tokio = { version = "1.0", features = ["full"] }
 tokio-stream = "0.1"
 
 
-
+# Since 0.3.0 main.rs is now app.rs commit-sha: 024b4abb02b1d28e9cfb8038ca39a7212bdca204
 [[bin]]
 name = "exchange"
 path = "src/app.rs"

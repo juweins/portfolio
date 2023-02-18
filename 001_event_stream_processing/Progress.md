@@ -25,3 +25,7 @@ Testing the consumer is a bit tricky, because it is a blocking function. I have 
 ### 5. Implemented the kafka consumer.
 
 This first version is a simple consumer based on BaseConsumer which allows custom polling. This was kind of a struggle, because testing the conumer is not that easy since it is a blocking function. For my intended implementation I have to alter the original use case for a kafka consumer. I overcome this by using a idle check to see if there are any messages in the queue. The consumer shuts down when there are no more messages for x subsequent polls. This is not the best solution, but it works for now.
+
+### 6. Wrapped the application in a clap CLI app.
+
+Today (02/18) I finally wrapped the application in a first version of an CLI app. This will be the main entry point and the targeted use case for the application. As described in the project outline, the binary can easily be deployed to a docker container or a VM. From this point on, it will just be a matter of developing a sequence of commands to be executed one after the other.
