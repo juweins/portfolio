@@ -11,7 +11,7 @@
 #[cfg(test)]
 mod tests {
 
-    use exchange_stream::{push_data, request_data};
+    use exchange::{push_data, request_data};
 
     #[tokio::test]
     async fn test_request_data() {

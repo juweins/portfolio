@@ -10,7 +10,7 @@
 #[cfg(test)]
 mod tests {
 
-    use exchange_stream::{request_data};
+    use exchange::{request_data};
 
     #[tokio::test]
     async fn valid_api() {

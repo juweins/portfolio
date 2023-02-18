@@ -10,9 +10,9 @@
 mod tests {
     use std::time::Duration;
 
-    use exchange_stream::client::{new_kafka_producer, new_kafka_consumer};
-    use exchange_stream::producer::push_to_kafka;
-    use exchange_stream::consumer::read_from_kafka;
+    use exchange::client::{new_kafka_producer, new_kafka_consumer};
+    use exchange::producer::push_to_kafka;
+    use exchange::consumer::read_from_kafka;
     use rdkafka::error::KafkaError;
     use rdkafka::producer::FutureRecord;
     use rdkafka::util::Timeout;
@@ -36,7 +36,7 @@ mod tests {
             
             // Send consumer in a background thread to avoid blocking
             // Capture the result in a variable for testing
-            let mut consumer = tokio::spawn(async move {
+            let consumer = tokio::spawn(async move {
                 let result = read_from_kafka(topic, test).await;
                 result
             });

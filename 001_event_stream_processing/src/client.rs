@@ -47,10 +47,11 @@ pub async fn new_kafka_consumer() -> BaseConsumer {
         .set("group.id", &group_id)
         .set("message.timeout.ms", &message_timeout_ms.to_string())
         .set("enable.auto.commit", "true")
+        .set("connections.max.idle.ms", "1000")
         .create()
         .expect("Error: Failed to create Kafka consumer");
-    
-    // return the consumer by lifetime
+
+    // return the consumer
     consumer.to_owned()
 }
 
