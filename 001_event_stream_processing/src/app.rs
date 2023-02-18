@@ -26,7 +26,7 @@ async fn main() {
             match result {
                 Ok(_) => {
                     info!("Data pushed to Kafka");
-                    info!("Data: {}", result.unwrap());
+                    info!("Data: {:?}", result.unwrap());
             },
                 Err(e) => warn!("Error while pushing data to Kafka: {}", e)
             }
@@ -34,7 +34,7 @@ async fn main() {
         },
         Command::Consume => {
             info!("Consumer selected");
-            let result = read_from_kafka("test", true).await;
+            let result = read_from_kafka("test").await;
 
             match result {
                 Ok(_) => {
