@@ -5,19 +5,24 @@
 
 use std::time::Duration;
 
+use bytecount::num_chars;
+use log::{warn, info};
+
 use crate::client::new_kafka_consumer;
 use crate::get_kafka_details;
 
 use rdkafka::error::{KafkaError, KafkaResult};
-use log::{warn, info};
 use rdkafka::{Message};
 use rdkafka::config::ClientConfig;
 use rdkafka::consumer::{Consumer,BaseConsumer};
 
 
-
-
-pub async fn read_from_kafka(topic: &str, test: bool) -> Result<(u8), KafkaError>{
+/// Reads from the Kafka topic. (Kafka Consumer)
+/// - Establishes a connection to the Kafka broker as defined in the kafka_key.json file
+/// - Reads the messages from the topic
+/// 
+/// - Returns a tuple (total number of messages read, byte size of the individual messages, total byte size transmitted)
+pub async fn read_from_kafka(topic: &str, test: bool) -> Result<(u8, Vec<u8>, u32), KafkaError>{
 
     // TODO: Why does calling new_kafka_consumer() here not work?
     // - It works in the producer.rs file
@@ -56,54 +61,80 @@ pub async fn read_from_kafka(topic: &str, test: bool) -> Result<(u8), KafkaError
     let mut message_counter: u8 = 0;
     let mut retry_counter: u8 = 0;
 
-    // Initialize the message
-    let event_message: String = "".to_string();
+    // Initialize a vector to store the bytes of consumed messages 
+    let mut message_bytes: Vec<u8> = Vec::new();
 
     // Subscribe to the topic
     consumer.subscribe(&[topic]).expect("Error: Failed to subscribe to topic");
-    info!("Subscribed to topic: {}", topic);
 
+    info!("Subscribed to topic: {}", topic);
     info!("Consumer starts...");
+
     loop {
-        // poll the stream for a message
+        // Poll the stream for a message
         let message = consumer.poll(Duration::from_secs(5));
 
         // Initialize variable to check idle state
         let msg = message;
 
-        // check if the stream is idle
+        // Check if the stream is idle
         if msg.is_none() {
             
             info!("Listening for messages... (retry={})", retry_counter);
 
-            // if the stream is idle, increase the retry counter
+            // If the stream is idle, increase the retry counter
             retry_counter += 1;
 
-            // put the thread to sleep for 2 seconds
+            // Put the thread to sleep for 2 seconds
             tokio::time::sleep(Duration::from_secs(2)).await;
 
-            // if max retries, break the loop to exit the consumer stream
+            // If max retries, break the loop to exit the consumer stream
             if retry_counter > 5 {
                 break;
             }
-        } else {
+        } else if msg.is_some() {
 
-            // if the stream is not idle, reset the retry counter
+            // If the stream is not idle, reset the retry counter
             retry_counter = 0;
 
-            // increase the message counter
+            // Increase the message counter
             message_counter += 1;
 
-            // convert the message to a readable string in stdout
-            let message = msg.unwrap().unwrap().payload().unwrap().to_owned();
-            let readable_message = String::from_utf8(message).unwrap();
 
-            // print the message
-            println!("Message: {}", readable_message);
+            // Convert the message to a readable string in stdout
+            match msg {
+                Some(Ok(m)) => {
+                    let message = m.payload().unwrap().to_owned();
+                    let bytes_received = bytecount::num_chars(&message) as u8;
+
+                    message_bytes.push(bytes_received);
+
+                    // Print the message (debugging/development)
+                    // TODO: change this before 1.0.0 // to info!()
+                    println!("Message: {}", String::from_utf8(message).unwrap());
+                },
+                Some(Err(e)) => {
+                    warn!("Error while reading from stream: {}", e);
+                },
+                None => {
+                    warn!("Unexpected empty message");
+                }
+            }
+            // let message = msg.unwrap().unwrap().payload().unwrap().to_owned();
+            // let readable_message = String::from_utf8(message).unwrap();
+        }
+    }
+
+        // Clone the message vector to calculate the total byte size
+        let vector = message_bytes.clone();
+
+        let mut total_bytes: u32 = 0;
+
+        for i in vector {
+            total_bytes += i as u32;
         }
 
-    }
         info!("Terminate listening for messages... (max retries reached)");
-        println!("Message counter: {}", message_counter);
-        Ok(message_counter)
+        info!("Message received: {}", message_counter);
+        Ok((message_counter, message_bytes, total_bytes))
 }

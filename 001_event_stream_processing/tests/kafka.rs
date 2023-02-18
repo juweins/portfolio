@@ -19,7 +19,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_push_to_kafka() {
-        let result = push_to_kafka("test", true).await;
+        let result = push_to_kafka("test", "example_response.json").await;
         assert!(result.is_ok());
     }
 
@@ -30,6 +30,7 @@ mod tests {
         let topic = "test";
         let test = true;
         let message = "test_message";
+        let message_bytes = bytecount::num_chars(message.as_bytes()) as u8;
 
             // Create a new Kafka producer (Consumer is not working here, yet)
             let push = new_kafka_producer().await;
@@ -51,14 +52,18 @@ mod tests {
             ).await;
 
             // Wait for the consumer to finish by timeout (idle mode)
-            let consumer = consumer.await.unwrap();
+            let result = consumer.await.unwrap().expect("Error: Consumer failed to read from Kafka");
+
+
+            let message_count = result.0;
+            let message_size = result.1;
+            let total_size = result.2;
 
             // Check if tasks were successful
             assert!(producer.is_ok());
-            assert!(consumer.is_ok());
-
-            // Check if the consumer received the message
-            assert_eq!(consumer.unwrap(), 1)
+            assert_eq!(message_count, 1);
+            assert_eq!(message_size[0], message_bytes); // Only one message is pushed atm.
+            assert_eq!(total_size, message_bytes as u32); // Should therefore be the same as the message size
     }
 
 }

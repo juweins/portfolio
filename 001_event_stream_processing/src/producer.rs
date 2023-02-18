@@ -5,40 +5,62 @@
 
 use crate::client::new_kafka_producer;
 
+use std::io::Error;
+
+use bytecount::num_chars;
+use log::{warn, info};
+use uuid::Uuid;
+
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use rdkafka::error::{KafkaError, KafkaResult};
 
+
+
 use std::time::Duration;
 
-// Take API response and push it to (local) Kafka
-// - The function uses the rdkafka crate
-// - The function uses the kafka_key.json file for necessary details
-// TODO: Explode the function into smaller parts
-pub async fn push_to_kafka(topic_name: &str, test: bool) -> Result<(), KafkaError> {
+/// Pushes a message to the Kafka topic. (Kafka Producer)
+/// - Establishes a connection to the Kafka broker as defined in the kafka_key.json file
+/// - Creates a new record with the message content (e.g. the saved API response)
+/// - Sends the record
+/// - Returns the number of messages sent
+pub async fn push_to_kafka(topic_name: &str, message_content: &str) -> Result<u8, KafkaError> {
+
+    // Initialize the unique uuid as key (Maybe use a timestamp instead?)
+    let key =  Uuid::new_v4().to_string();
 
     // Initialize the Kafka producer
     let producer = new_kafka_producer().await;
+
     // Temporary: Read a saved response from a file
     // This is to avoid hitting the API limit early on
-    // TODO: Remove this and use the API response directly
-
-    // TODO: Remove test flag - development only!
     let mut response_body: Vec<u8> = Vec::new();
-    if test {
-        response_body = "test_message".as_bytes().to_vec();
-    } else {
-        response_body = std::fs::read("example_response.json").unwrap();
-    }
+
+    response_body = std::fs::read(message_content.to_string()).unwrap();
 
     // Create a new record
     let record = FutureRecord::to(topic_name)
         .payload(&response_body)
-        .key("key");
+        .key(&key);
 
     // Send the record
     let delivery_status = producer.send(record, Duration::from_secs(0)).await;
-    println!("Delivery status: {:?}", delivery_status);
 
-    Ok(())
+    // Return the result of the operation to CLI
+    match delivery_status {
+        Ok(_) => {
+            // Calculate the number of bytes sent
+            let bytes_sent: u8 = bytecount::num_chars(&response_body) as u8;
+
+            info!("Message sent successfully");
+            info!("Key: {}", &key);
+            info!("Bytes sent: {}", bytes_sent);
+
+            Ok(bytes_sent)
+        },
+        Err(e) => {
+            warn!("Error while sending message: {:?}", e);
+            Err(KafkaError::NoMessageReceived)
+        }
+    }
 }
