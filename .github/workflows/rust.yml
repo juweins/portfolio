@@ -14,5 +14,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
+    - name: Build 001 Project
+      run: cd 001_event_stream_processing/ && cargo build --verbose
