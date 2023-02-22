@@ -20,7 +20,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_push_data() {
+    async fn test_push_to_azure() {
         let result = push_to_azure().await;
         assert!(result.is_ok());
     }

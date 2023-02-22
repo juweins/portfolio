@@ -11,6 +11,9 @@ use log::{info, warn};
 #[tokio::main]
 async fn main() {
 
+    // Initialize Logger
+    env_logger::init();
+
     let args = Cli::parse();
 
     // set_term_width(0) in clap
@@ -21,7 +24,12 @@ async fn main() {
     match args.subcommand {
         Command::Produce => {
             info!("Producer selected");
-            let result = push_to_kafka("test", "example_response.json").await;
+
+            // Parse arguments
+            let topic = args.args[0].clone();
+            let message = args.args[1].clone();
+
+            let result = push_to_kafka(&topic, &message).await;
 
             match result {
                 Ok(_) => {
@@ -34,7 +42,25 @@ async fn main() {
         },
         Command::Consume => {
             info!("Consumer selected");
-            let result = read_from_kafka("test").await;
+
+            // Parse arguments
+            let topic = args.args[0].clone();
+            let ttl: u8;
+
+            // Parse ttl as u8 or set default value
+            match args.args[1].parse::<u8>() {
+                Ok(t) => {
+                    info!("Received TTL: {}", t);
+                    ttl = t;
+                }
+                Err(_) => {
+                    info!("Error parsing TTL. Setting default TTL: 30 seconds");
+                    ttl = 30
+                }
+            }
+
+
+            let result = read_from_kafka(&topic, ttl).await;
 
             match result {
                 Ok(_) => {

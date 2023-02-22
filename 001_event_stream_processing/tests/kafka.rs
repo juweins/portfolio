@@ -54,7 +54,7 @@ mod tests {
             // Send consumer in a background thread to avoid blocking
             // Capture the result in a variable for testing
             let consumer = tokio::spawn(async move {
-                let result = read_from_kafka(test_topic).await;
+                let result = read_from_kafka(test_topic, 30).await;
                 result
             });
 

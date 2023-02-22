@@ -22,7 +22,7 @@ use rdkafka::consumer::{Consumer,BaseConsumer};
 /// - Reads the messages from the topic
 /// 
 /// - Returns a tuple (total number of messages read, byte size of the individual messages, total byte size transmitted)
-pub async fn read_from_kafka(topic: &str) -> Result<(u8, Vec<u8>, u32), KafkaError>{
+pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u8>, u32), KafkaError>{
 
     // TODO: Why does calling new_kafka_consumer() here not work?
     // - It works in the producer.rs file
