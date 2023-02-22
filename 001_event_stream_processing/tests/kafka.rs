@@ -21,8 +21,10 @@ mod tests {
     #[tokio::test]
     async fn test_push_to_kafka() {
 
-        // Initialize the topic and test variables
-        let test_topic = "test";
+        // Initialize the topic
+        // This topic is used solely for push test
+        // If the topic is also test, the read test will fail. (2 messages are in the topic)
+        let test_topic = "test_push";
         let test_file = "example_response.json";
         let test_message = std::fs::read(test_file).unwrap();
         let test_bytes = bytecount::num_chars(&test_message) as u8;
@@ -53,8 +55,9 @@ mod tests {
             
             // Send consumer in a background thread to avoid blocking
             // Capture the result in a variable for testing
+            // TTL is set to 1 second to run quickly
             let consumer = tokio::spawn(async move {
-                let result = read_from_kafka(test_topic, 30).await;
+                let result = read_from_kafka(test_topic, 1).await;
                 result
             });
 
