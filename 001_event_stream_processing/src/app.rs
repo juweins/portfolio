@@ -72,6 +72,12 @@ async fn main() {
                 Ok(_) => info!("Data requested from {} successfully", &api_name),
                 Err(e) => error!("Error while requesting data from {}: {}", &api_name, e)
             }
+        },
+
+        Command::Version => {
+            info!("Version selected");
+            println!("Version: {}", env!("CARGO_PKG_VERSION"));
         }
+
     }
 }

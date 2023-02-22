@@ -81,4 +81,19 @@ mod tests {
 
         assert!(output.status.success());
     }
+
+    #[test]
+    fn test_menu_version() {
+        let output = Command::new("cargo")
+            .arg("run")
+            .arg("--")
+            .arg("version")
+            .output()
+            .expect("Failed to execute process");
+
+        let version = env!("CARGO_PKG_VERSION");
+
+        assert!(output.status.success());
+        assert_eq!(String::from_utf8(output.stdout).unwrap(), format!("Version: {}\n", version));
+    }
 }
