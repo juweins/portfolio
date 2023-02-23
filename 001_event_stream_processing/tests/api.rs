@@ -14,13 +14,14 @@ mod tests {
 
     #[tokio::test]
     async fn valid_api() {
-        let result = request_data("exchangerates_api", "2023-01-01", "2023-01-28").await;
-        assert!(result.is_ok());
+        let result = request_data("test_api", "2023-01-01", "2023-01-28").await;
+        println!("{}", &result.unwrap());
+
     }
 
     #[tokio::test]
     async fn invalid_api() {
-        let result = request_data("random_api", "2023-01-01", "2023-01-28").await;
+        let result = request_data("not_configured_api", "2023-01-01", "2023-01-28").await;
         assert!(result.is_err());
     }
 

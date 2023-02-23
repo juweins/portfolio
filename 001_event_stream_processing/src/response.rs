@@ -20,3 +20,9 @@ struct ExchangeRates {
     GBP: f64,
     USD: f64,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CatNinja {
+    fact: String,
+    length: i32,
+}

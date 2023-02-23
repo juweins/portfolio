@@ -3,7 +3,8 @@ mod errors;
 mod request;
 mod response;
 
-use log::{info, warn};
+use log::{info, warn, error};
+use serde_json::json;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -17,7 +18,7 @@ pub mod consumer;
 pub mod producer;
 
 use config::{ApiDetails, AzureConfig, KafkaConfig};
-use response::Exchange;
+use response::{CatNinja,Exchange};
 
 use azure_storage::prelude::*;
 use azure_storage_blobs::prelude::*;
@@ -25,10 +26,26 @@ use azure_storage_blobs::prelude::*;
 // TODO: Make the symbols dynamic by wrapping in a CLI argument
 /// Calls the API via HTTP Request
 /// - 
-/// - Returns the result formatted as a API specific struct (Exchange, JSON)
-pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> Result<Exchange, anyhow::Error> {
+/// - Returns the result formatted as a API specific struct (JSON)
+pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> Result<serde_json::Value, anyhow::Error> {
+
     // TODO: URL builder for dynamic base currency and retrieved symbols
-    let request_url = format!("https://api.apilayer.com/exchangerates_data/timeseries?start_date={}&end_date={}&base=EUR&symbols=CHF,GBP,USD", start_date, end_date);
+    let request_url: String = match api_name{
+        "exchangerates_api" => {
+            let request_url = format!("https://api.apilayer.com/exchangerates_data/timeseries?start_date={start}&end_date={end}&base=EUR&symbols=CHF,GBP,USD",
+                                    start=start_date, end=end_date);
+            request_url
+        }
+        "test_api" => {
+            let request_url = format!("https://catfact.ninja/fact");
+            request_url
+        }
+        _ => {
+            error!("API {} not supported: Missing configuration.", api_name);
+            return Err(anyhow!("API {} not supported: Missing configuration.", api_name))
+        }
+    };
+
     println!("Requesting from: {}", request_url);
 
     let result = get_api_key(api_name);
@@ -50,8 +67,8 @@ pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> R
         .header("apikey", result.unwrap())
         .send()
         .await?
-        // If the request is successful, the response is parsed into a struct
-        .json::<Exchange>()
+        // If the request is successful, the response is parsed into json
+        .json()
         .await?;
 
     Ok(response)

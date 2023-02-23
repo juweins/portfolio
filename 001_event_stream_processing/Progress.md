@@ -29,3 +29,15 @@ This first version is a simple consumer based on BaseConsumer which allows custo
 ### 6. Wrapped the application in a clap CLI app.
 
 Today (02/18) I finally wrapped the application in a first version of an CLI app. This will be the main entry point and the targeted use case for the application. As described in the project outline, the binary can easily be deployed to a docker container or a VM. From this point on, it will just be a matter of developing a sequence of commands to be executed one after the other.
+
+<br></br>
+
+## 2023 KW 9 🎉 **1000 lines of code** 🎉
+
+My project just crossed the 1000 lines of code mark. I am happy with the progress so far. In this week I have been working on the following:
+
+### 1. Finished the implementation of argument parsing.
+Open todo: Find a way to make the arguments dynamically for supporting multiple api's. This is not a priority at the moment, but it would be nice to have. I will probably have to use a macro to achieve this. For now, every api requested will need the same arguments - even if they are not used/required.
+
+### 2. Enabled the flexible use for multiple api.
+For this I had to change the function signature of the request function. Instead of using an explicit api structure (Exchange) I chose to return a generic json. This way I can use the same function for multiple api's. I still have to figure out how users may dynamically add new api's to the application, since the exchangerates api need a string literal (as of now). This problem may be solved by itself when I switch to exchangerates_api/latest. It may limit api configurability. Anyway, this will be adressed in a future feature.
