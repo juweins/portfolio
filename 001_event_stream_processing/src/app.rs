@@ -67,7 +67,8 @@ async fn main() {
             info!("Writer selected");
             info!("Container name: {}, File: {}", container_name, file);
             
-            let result = push_to_azure(&container_name, &file).await;
+            //TODO: blob_name should be optional and default to file
+            let result = push_to_azure(&container_name, &file, &file).await;
 
             match result {
                 Ok(_) => info!("Data push to Azure Blob Storage {} successfully", &container_name),

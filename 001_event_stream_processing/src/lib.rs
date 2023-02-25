@@ -79,26 +79,12 @@ pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> R
 /// - Reads the file to be pushed from the file system
 /// - Pushes the file to Azure Blob Storage
 /// - Returns a Result with the status of the operation
-pub async fn push_to_azure(container_name: &str, filename: &str) -> azure_core::Result<()> {
+pub async fn push_to_azure(container_name: &str, filename: &str, blob_name: &str) -> azure_core::Result<()> {
     // Temporary: Read a saved response from a file
     // This is to avoid hitting the API limit early on
     let blob_body = std::fs::read(filename).unwrap();
 
-    // Retrieve mandatory details from json file
-    let az_details = get_azure_details().unwrap();
-
-    // Assign details to variables
-    let account = az_details.storage_account_name;
-    let key = az_details.storage_account_key;
-    let blob_name = az_details.storage_blob_name;
-
-    let container = container_name.to_string();
-
-    // Create a blob client
-    let storage_credentials = StorageCredentials::Key(account.clone(), key);
-    let blob_client =
-        ClientBuilder::new(account, storage_credentials).blob_client(&container, blob_name);
-    
+    let blob_client = get_az_client().blob_client(container_name, blob_name);
     // Check if container exists
     // - If not, create it
     let container_exists = blob_client.container_client().exists().await?;
@@ -133,22 +119,9 @@ pub async fn push_to_azure(container_name: &str, filename: &str) -> azure_core::
 /// - Returns a Result with the status of the operation
 /// - Returns the file as a vector of bytes
 /// - Returns an error if the file is empty
+pub async fn pull_from_azure(container_name: &str, blob_name: &str) -> azure_core::Result<Vec<u8>> {
 
-pub async fn pull_from_azure(container_name: &str, filename: &str) -> azure_core::Result<Vec<u8>> {
-    // Retrieve mandatory details from json file
-    let az_details = get_azure_details().unwrap();
-
-    // Assign details to variables
-    let account = az_details.storage_account_name;
-    let key = az_details.storage_account_key;
-    let blob_name = az_details.storage_blob_name;
-
-    let container = container_name.to_string();
-
-    // Create a blob client
-    let storage_credentials = StorageCredentials::Key(account.clone(), key);
-    let blob_client =
-        ClientBuilder::new(account, storage_credentials).blob_client(&container, blob_name);
+    let blob_client = get_az_client().blob_client(container_name, blob_name);
 
     // Get the blob
     let blob = blob_client.get_content().await;
@@ -163,10 +136,10 @@ pub async fn pull_from_azure(container_name: &str, filename: &str) -> azure_core
                 warn!("{}", message);
                 Err(azure_core::Error::message(azure_storage::ErrorKind::Other, message))
             } else {
-                info!("Successfully retrieved blob: {:?}", filename);
+                info!("Successfully retrieved blob: {:?}", blob_name);
 
                 // Create new file to store the retrieved blob content
-                let mut file = std::fs::File::create(filename).unwrap();
+                let mut file = std::fs::File::create(blob_name).unwrap();
                 file.write(&content).unwrap();
 
                 Ok(content)
@@ -224,6 +197,98 @@ fn get_kafka_details() -> Result<KafkaConfig, Error> {
     )
     .unwrap();
     Ok(kafka_details)
+}
+
+/// Creates a container in Azure Blob Storage
+/// - Establishes a connection to Azure Blob Storage via azure_key.json
+/// - Creates the container in Azure Blob Storage
+pub async fn create_azure_container(container_name: &str) -> azure_core::Result<()> {
+
+    let blob_client = get_az_client().blob_client(container_name, "");
+
+    // Create the container
+    let container = blob_client.container_client().create().public_access(PublicAccess::None).await;
+    
+    // Unwrap the result
+    let container = match container {
+        Ok(_) => {
+            info!("Successfully created container: {}", container_name);
+            Ok(())
+        }
+        Err(e) => {
+            error!("Error creating container: {}", e);
+            Err(e)
+        }
+    };
+    
+    container
+}
+
+/// Delete a file from Azure Blob Storage
+/// - Establishes a connection to Azure Blob Storage via azure_key.json
+/// - Deletes the file from Azure Blob Storage
+pub async fn delete_azure_blob(container_name: &str, filename: &str) -> azure_core::Result<()> {
+
+    let blob_client = get_az_client().blob_client(container_name, filename);
+
+    // Delete the blob
+    let blob = blob_client.delete().await;
+    
+    // Unwrap the result
+    let blob = match blob {
+        Ok(_) => {
+            info!("Successfully deleted blob: {:?}", filename);
+            Ok(())
+        }
+        Err(e) => {
+            error!("Error deleting blob data: {}", e);
+            Err(e)
+        }
+    };
+    
+    blob
+}
+
+/// Deletes a container from Azure Blob Storage
+/// - Establishes a connection to Azure Blob Storage via azure_key.json
+/// - Deletes the container from Azure Blob Storage
+pub async fn delete_azure_container(container_name: &str) -> azure_core::Result<()> {
+
+    let blob_client = get_az_client().blob_client(container_name, "");
+    // Delete the container
+    let container = blob_client.container_client().delete().await;
+    
+    // Unwrap the result
+    let container = match container {
+        Ok(_) => {
+            info!("Successfully deleted container: {:?}", container_name);
+            Ok(())
+        }
+        Err(e) => {
+            error!("Error deleting container data: {}", e);
+            Err(e)
+        }
+    };
+    
+    container
+}
+
+/// Get client for Azure Blob Storage connection
+/// - Establishes a connection to Azure Blob Storage via azure_key.json
+pub fn get_az_client() -> ClientBuilder {
+    // Retrieve mandatory details from json file
+    let az_details = get_azure_details().unwrap();
+
+    // Assign details to variables
+    let account = az_details.storage_account_name;
+    let key = az_details.storage_account_key;
+
+    // Create a blob client
+    let storage_credentials = StorageCredentials::Key(account.clone(), key);
+    let client =
+        ClientBuilder::new(account, storage_credentials);
+
+    client
 }
 
 // --------------------
