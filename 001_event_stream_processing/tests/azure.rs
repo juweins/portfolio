@@ -16,14 +16,9 @@ mod tests {
     const test_container_name: &str = "test";
     const test_filename: &str = "data/test_file.json";
 
-    #[tokio::test]
-    async fn test_request_data() {
-        let result = request_data("exchangerates_api", "2023-01-01", "2023-01-28").await;
-        assert!(result.is_ok());
-    }
-
     // TODO: Test for alternative container/filename combinations
     // - Should test for correct error handling
+    
     // TODO: Requires helper function to delete the container/file after the test
     #[tokio::test]
     async fn test_push_to_azure() {

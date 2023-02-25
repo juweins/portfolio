@@ -20,6 +20,12 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_exchange_rates_api() {
+        let result = request_data("exchangerates_api", "2023-01-01", "2023-01-28").await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
     async fn invalid_api() {
         let result = request_data("not_configured_api", "2023-01-01", "2023-01-28").await;
         assert!(result.is_err());

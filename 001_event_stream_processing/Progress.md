@@ -41,3 +41,6 @@ Open todo: Find a way to make the arguments dynamically for supporting multiple 
 
 ### 2. Enabled the flexible use for multiple api.
 For this I had to change the function signature of the request function. Instead of using an explicit api structure (Exchange) I chose to return a generic json. This way I can use the same function for multiple api's. I still have to figure out how users may dynamically add new api's to the application, since the exchangerates api need a string literal (as of now). This problem may be solved by itself when I switch to exchangerates_api/latest. It may limit api configurability. Anyway, this will be adressed in a future feature.
+
+### 3. Implemented the azure read function. (& extended the CLI app)
+This function reads the data from the azure blob storage as defined in the config file. I will probably need the function in a future feature, for now it is just implemented for completeness.
