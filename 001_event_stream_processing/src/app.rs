@@ -3,7 +3,7 @@ mod cli;
 
 use exchange::producer::push_to_kafka;
 use exchange::consumer::read_from_kafka;
-use exchange::{push_to_azure, request_data};
+use exchange::{push_to_azure, request_data, pull_from_azure};
 use exchange::cli::{Cli, Command};
 
 use clap::*;
@@ -51,11 +51,23 @@ async fn main() {
             }
         },
 
+        Command::Read{container_name, file} => {
+            info!("Reader selected");
+            info!("Container name: {}, File: {}", container_name, file);
+            
+            let result = pull_from_azure(&container_name, &file).await;
+
+            match result {
+                Ok(_) => info!("Data pulled from Azure Blob Storage {} successfully", &container_name),
+                Err(e) => error!("Error while pulling data from Azure Blob Storage {}: {}", &container_name, e)
+            }
+        },
+
         Command::Write{container_name, file} => {
             info!("Writer selected");
             info!("Container name: {}, File: {}", container_name, file);
             
-            let result = push_to_azure().await;
+            let result = push_to_azure(&container_name, &file).await;
 
             match result {
                 Ok(_) => info!("Data push to Azure Blob Storage {} successfully", &container_name),

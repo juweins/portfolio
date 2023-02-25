@@ -21,7 +21,7 @@ mod tests {
             .arg("--topic")
             .arg("test")
             .arg("--file")
-            .arg("example_response.json")
+            .arg("data/example_response.json")
             .output()
             .expect("Failed to execute process");
 
@@ -55,7 +55,7 @@ mod tests {
             .arg("--container-name")
             .arg("test")
             .arg("--file")
-            .arg("example_response.json")
+            .arg("data/example_response.json")
             .output()
             .expect("Failed to execute process");
 
@@ -76,6 +76,22 @@ mod tests {
             .arg("2021-01-01")
             .arg("--end-date")
             .arg("2021-01-28")
+            .output()
+            .expect("Failed to execute process");
+
+        assert!(output.status.success());
+    }
+
+    #[test]
+    fn test_menu_read() {
+        let output = Command::new("cargo")
+            .arg("run")
+            .arg("--")
+            .arg("read")
+            .arg("--container-name")
+            .arg("test")
+            .arg("--file")
+            .arg("data/example_response.json")
             .output()
             .expect("Failed to execute process");
 

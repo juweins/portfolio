@@ -38,6 +38,14 @@ pub enum Command {
         ttl: u8,
     },
 
+    #[clap(about = "Read data from Azure Blob Storage")]
+    Read {
+        #[clap(short, long, help = "Container name")]
+        container_name: String,
+        #[clap(short, long, help = "File path")]
+        file: String,
+    },
+
     #[clap(about = "Write data to Azure Blob Storage")]
     Write {
         #[clap(short, long, help = "Container name")]
