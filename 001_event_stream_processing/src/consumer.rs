@@ -3,6 +3,7 @@
     It mimics the consumer in the project setup
 */
 
+use std::collections::HashMap;
 use std::time::Duration;
 
 use bytecount::num_chars;
@@ -22,7 +23,7 @@ use rdkafka::consumer::{Consumer,BaseConsumer, CommitMode};
 /// - Reads the messages from the topic
 /// 
 /// - Returns a tuple (total number of messages read, byte size of the individual messages, total byte size transmitted)
-pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u8>, u32), KafkaError>{
+pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<Vec<u8>>,Vec<u8>, u32), KafkaError>{
 
     // TODO: Why does calling new_kafka_consumer() here not work?
     // - It works in the producer.rs file
@@ -62,6 +63,11 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u
 
     // Initialize a vector to store the bytes of consumed messages 
     let mut message_bytes: Vec<u8> = Vec::new();
+
+    // Initialize a vector to store all messages as strings
+    let mut message_content: Vec<Vec<u8>> = Vec::new();
+
+
 
     // Subscribe to the topic
     consumer.subscribe(&[topic]).expect("Error: Failed to subscribe to topic");
@@ -104,8 +110,9 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u
             match msg {
                 Some(Ok(m)) => {
                     let message = m.payload().unwrap().to_owned();
-                    let bytes_received = bytecount::num_chars(&message) as u8;
+                    message_content.push(message.clone());
 
+                    let bytes_received = bytecount::num_chars(&message) as u8;
                     message_bytes.push(bytes_received);
 
                     // Print the message (debugging/development)
@@ -141,5 +148,5 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u
 
         info!("Terminate listening for messages... (max retries reached)");
         info!("Message received: {}", message_counter);
-        Ok((message_counter, message_bytes, total_bytes))
+        Ok((message_counter, message_content, message_bytes, total_bytes))
 }
