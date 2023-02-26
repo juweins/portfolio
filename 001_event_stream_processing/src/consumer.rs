@@ -71,7 +71,7 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u
 
     loop {
         // Poll the stream for a message
-        let message = consumer.poll(Duration::from_secs(5));
+        let message = consumer.poll(Duration::from_secs(time_to_live as u64));
 
         // Initialize variable to check idle state
         let msg = message;

@@ -19,6 +19,7 @@ pub struct Cli {
 /// - Write: Write data to Azure Blob Storage
 /// - Read: Read data from Azure Blob Storage
 /// - Request: Request data from external API
+/// - Ingest: Run the applications pipeline (Request -> Produce)
 /// - Config: Configure the application (API for Ingest)
 /// - Version: Get version information
 #[derive(clap::Subcommand)]
@@ -60,6 +61,14 @@ pub enum Command {
     Request {
         #[clap(short, long, help = "Name of the API to request")]
         api_name: String,
+    },
+
+    #[clap(about = "Run the applications pipeline")]
+    Ingest {
+        #[clap(short, long, help = "Name of the API to request")]
+        api_name: String,
+        #[clap(short, long, help = "Topic name for Producer")]
+        topic: String,
     },
 
     #[clap(about = "Configure the application")]

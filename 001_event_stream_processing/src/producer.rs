@@ -29,11 +29,7 @@ pub async fn push_to_kafka(topic_name: &str, message_content: &str) -> Result<(u
     // Initialize the Kafka producer
     let producer = new_kafka_producer().await;
 
-    // Temporary: Read a saved response from a file
-    // This is to avoid hitting the API limit early on
-    let mut response_body: Vec<u8> = Vec::new();
-
-    response_body = std::fs::read(message_content.to_string()).unwrap();
+    let response_body: Vec<u8> = Vec::from(message_content);
 
     // Create a new record
     let record = FutureRecord::to(topic_name)

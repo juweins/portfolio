@@ -1,9 +1,6 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
 mod cli;
 
-use std::os::unix::process::ExitStatusExt;
-use std::process;
-
 use exchange::producer::push_to_kafka;
 use exchange::consumer::read_from_kafka;
 use exchange::{push_to_azure, request_data, pull_from_azure};
@@ -11,6 +8,7 @@ use exchange::cli::{Cli, Command};
 
 use clap::*;
 use log::{info, warn, error};
+use serde_json::Value;
 
 #[tokio::main]
 async fn main() {
@@ -89,6 +87,26 @@ async fn main() {
                 Ok(_) => info!("Data requested from API {} successfully", &api_name),
                 Err(e) => error!("Error while requesting data from API {}: {}", &api_name, e)
             }
+        },
+
+        Command::Ingest{api_name, topic} => {
+            info!("Forwarder selected");
+            info!("API: {}, Topic: {}", &api_name, &topic);
+
+            let response = match request_data(&api_name).await {
+                Ok(response) => Some(response),
+                Err(e) => {
+                    error!("Error while requesting data from API {}: {}", &api_name, e);
+                    None
+                }
+            };
+
+            let write = match push_to_kafka(&topic, &response.unwrap().to_string()).await {
+                Ok(_) => info!("Data pushed to Kafka"),
+                Err(e) => error!("Error while pushing data to Kafka: {}", e)
+            };
+            info!("Data ingest from API {} complete", &api_name)
+
         },
 
         Command::Config { name, url, key } => {

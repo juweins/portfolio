@@ -36,7 +36,7 @@ mod tests {
             .arg("--")
             .arg("consume")
             .arg("--topic")
-            .arg("test")
+            .arg("test_topic")
             .arg("--ttl")
             .arg("10")
             .output()
@@ -111,6 +111,24 @@ mod tests {
 
         assert!(output.status.success());
     }
+
+    #[test]
+    fn test_menu_ingest() {
+        let output = Command::new("cargo")
+            .arg("run")
+            .arg("--")
+            .arg("ingest")
+            .arg("--api-name")
+            .arg("test_api")
+            .arg("--topic")
+            .arg("test_topic")
+            .output()
+            .expect("Failed to execute process");
+
+        assert!(output.status.success());
+    }
+
+
 
     #[test]
     fn test_menu_version() {
