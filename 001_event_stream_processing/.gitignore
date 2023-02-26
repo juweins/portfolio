@@ -2,3 +2,6 @@
 secrets/api_key.json
 secrets/azure_key.json
 secrets/kafka_key.json
+
+# exclude personal files
+.vscode

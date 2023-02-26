@@ -14,7 +14,7 @@ use crate::get_kafka_details;
 use rdkafka::error::{KafkaError, KafkaResult};
 use rdkafka::{Message};
 use rdkafka::config::ClientConfig;
-use rdkafka::consumer::{Consumer,BaseConsumer};
+use rdkafka::consumer::{Consumer,BaseConsumer, CommitMode};
 
 
 /// Reads from the Kafka topic. (Kafka Consumer)
@@ -50,7 +50,6 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u
         .set("bootstrap.servers", &bootstrap_servers)
         .set("group.id", &group_id)
         .set("message.timeout.ms", &message_timeout_ms.to_string())
-        .set("enable.auto.commit", "true")
         .set("connections.max.idle.ms", "1000")
         .create()
         .expect("Error: Failed to create Kafka consumer");
@@ -112,12 +111,18 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<u
                     // Print the message (debugging/development)
                     // TODO: change this before 1.0.0 // to info!()
                     println!("Message: {}", String::from_utf8(message).unwrap());
+                    consumer.commit_message(&m, CommitMode::Async).unwrap();
                 },
                 Some(Err(e)) => {
                     warn!("Error while reading from stream: {}", e);
                 },
                 None => {
                     warn!("Unexpected empty message");
+                    warn!("Shutting down consumer");
+                    // Looking at implementations in other languages (e.g. Java)
+                    // There is no complement to wakeup() / close() function in rdkafka
+                    // Therefore, we break the loop with an empty message
+                    break;
                 }
             }
             // let message = msg.unwrap().unwrap().payload().unwrap().to_owned();
