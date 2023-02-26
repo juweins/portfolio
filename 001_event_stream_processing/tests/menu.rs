@@ -72,10 +72,6 @@ mod tests {
             .arg("request")
             .arg("--api-name")
             .arg("exchangerates_api")
-            .arg("--start-date")
-            .arg("2021-01-01")
-            .arg("--end-date")
-            .arg("2021-01-28")
             .output()
             .expect("Failed to execute process");
 
@@ -92,6 +88,24 @@ mod tests {
             .arg("test")
             .arg("--file")
             .arg("data/example_response.json")
+            .output()
+            .expect("Failed to execute process");
+
+        assert!(output.status.success());
+    }
+
+    #[test]
+    fn test_menu_config() {
+        let output = Command::new("cargo")
+            .arg("run")
+            .arg("--")
+            .arg("config")
+            .arg("--name")
+            .arg("example")
+            .arg("--url")
+            .arg("some_url")
+            .arg("--key")
+            .arg("some_api_key")
             .output()
             .expect("Failed to execute process");
 

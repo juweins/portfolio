@@ -27,44 +27,33 @@ use azure_storage_blobs::prelude::*;
 /// Calls the API via HTTP Request
 /// - 
 /// - Returns the result formatted as a API specific struct (JSON)
-pub async fn request_data(api_name: &str, start_date: &str, end_date: &str) -> Result<serde_json::Value, anyhow::Error> {
+pub async fn request_data(api_name: &str) -> Result<serde_json::Value, anyhow::Error> {
 
-    // TODO: URL builder for dynamic base currency and retrieved symbols
-    let request_url: String = match api_name{
-        "exchangerates_api" => {
-            let request_url = format!("https://api.apilayer.com/exchangerates_data/timeseries?start_date={start}&end_date={end}&base=EUR&symbols=CHF,GBP,USD",
-                                    start=start_date, end=end_date);
-            request_url
+    // With version exchange 0.6 onwards, the api calls are loaded from the config file. This allows the most flexibility.
+    // TODO: Command to configure the API calls
+
+    let request_url = match get_api_url(api_name) {
+        Ok(url) => url,
+        Err(e) => {
+            error!("Error: {}", e);
+            return Err(anyhow!("Error parsing url for {}: {}",api_name, e))
         }
-        "test_api" => {
-            let request_url = format!("https://catfact.ninja/fact");
-            request_url
-        }
-        _ => {
-            error!("API {} not supported: Missing configuration.", api_name);
-            return Err(anyhow!("API {} not supported: Missing configuration.", api_name))
+    };
+    let request_key = match get_api_key(api_name) {
+        Ok(key) => key,
+        Err(e) => {
+            error!("Error: {}", e);
+            return Err(anyhow!("Error parsing key for {}: {}",api_name, e))
         }
     };
 
-    println!("Requesting from: {}", request_url);
-
-    let result = get_api_key(api_name);
-
-    // If Error occured and terminate function early
-    match &result {
-        Ok(_) => {}
-        Err(e) => {
-            warn!("Error: {}", e);
-            return Err(anyhow!("Error parsing key for {}: {}",api_name, e))
-        }
-    }
 
     // Request data from API
     let client = reqwest::Client::new();
     let response = client
         .get(&request_url)
         // The API accepts a simple apikey parameter as authentication method
-        .header("apikey", result.unwrap())
+        .header("apikey", request_key)
         .send()
         .await?
         // If the request is successful, the response is parsed into json
@@ -173,6 +162,28 @@ fn get_api_key(api_name: &str) -> Result<String, KeyError> {
         Ok(api.unwrap().apikey.to_string())
     } else {
         warn!("No API key found for {}", api_name);
+        Err(KeyError::NotFound)
+    }
+}
+
+// Read the API url from a file
+// Since there are multiple urls present an api_name parameter is required
+// - Custom error type for urls
+fn get_api_url(api_name: &str) -> Result<String, KeyError> {
+    // read the api_key.json and retrieve the api key by name
+    let api_details = serde_json::from_str::<HashMap<String, ApiDetails>>(
+        &std::fs::read_to_string("secrets/api_key.json").unwrap(),
+    )
+    .unwrap();
+
+    // Retrieve ApiDetails matching the api_name
+    let api = api_details.get(api_name);
+
+    if let Some(_) = api {
+        info!("Found API url for {}", api_name);
+        Ok(api.unwrap().url.to_string())
+    } else {
+        warn!("No API url found for {}", api_name);
         Err(KeyError::NotFound)
     }
 }
@@ -316,6 +327,18 @@ fn test_valid_api_key() {
 fn test_invalid_api_key() {
     let result = get_api_key("random_api");
     assert!(result.is_err());
+}
+
+#[test]
+fn test_get_api_url() {
+    let result = get_api_url("exchangerates_api");
+    assert!(result.is_ok());
+}
+
+#[test]
+fn test_valid_api_url() {
+    let result = get_api_url("exchangerates_api");
+    assert!(&result.unwrap().is_ascii());
 }
 
 // Test the get_azure_details function

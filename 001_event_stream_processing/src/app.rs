@@ -1,6 +1,9 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
 mod cli;
 
+use std::os::unix::process::ExitStatusExt;
+use std::process;
+
 use exchange::producer::push_to_kafka;
 use exchange::consumer::read_from_kafka;
 use exchange::{push_to_azure, request_data, pull_from_azure};
@@ -76,15 +79,23 @@ async fn main() {
             }
         },
 
-        Command::Request{api_name, start_date, end_date} => {
-            info!("Reader selected");
-            info!("API name: {}, Start date: {}, End date: {}", api_name, start_date, end_date);
-            let result = request_data(&api_name, &start_date, &end_date).await;
+        Command::Request{api_name} => {
+            info!("Requester selected");
+            info!("API: {}", &api_name);
+
+            let result = request_data(&api_name).await;
 
             match result {
-                Ok(_) => info!("Data requested from {} successfully", &api_name),
-                Err(e) => error!("Error while requesting data from {}: {}", &api_name, e)
+                Ok(_) => info!("Data requested from API {} successfully", &api_name),
+                Err(e) => error!("Error while requesting data from API {}: {}", &api_name, e)
             }
+        },
+
+        Command::Config { name, url, key } => {
+            info!("Configurator selected");
+            info!("API: {}, URL: {}, API Key: {}", &name, &url, &key);
+            error!("Configurator not implemented yet! No entries have been added.");
+            // TODO: Add Configurator logic
         },
 
         Command::Version => {

@@ -19,6 +19,8 @@ pub struct Cli {
 /// - Write: Write data to Azure Blob Storage
 /// - Read: Read data from Azure Blob Storage
 /// - Request: Request data from external API
+/// - Config: Configure the application (API for Ingest)
+/// - Version: Get version information
 #[derive(clap::Subcommand)]
 pub enum Command {
 
@@ -54,15 +56,23 @@ pub enum Command {
         file: String,
     },
 
-    #[clap(about = "Request data from external API")]
+    #[clap(about = "Request most recent data from external API")]
     Request {
-        #[clap(short, long, help = "Name of the API")]
+        #[clap(short, long, help = "Name of the API to request")]
         api_name: String,
-        #[clap(short, long, help = "Start date: YYYY-MM-DD")]
-        start_date: String,
-        #[clap(short, long, help = "End date: YYYY-MM-DD")]
-        end_date: String,
     },
+
+    #[clap(about = "Configure the application")]
+    Config {
+        #[clap(short, long, help = "Name of the API")]
+        name: String,
+        #[clap(short, long, help = "URL of the API")]
+        url: String,
+        #[clap(short, long, help = "API key")]
+        key: String,
+    },
+
+    #[clap(about = "Get version information")]
     Version,
 
 }
