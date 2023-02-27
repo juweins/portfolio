@@ -1,16 +1,15 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
-mod cli;
 
-use std::sync::Arc;
-
-use exchange::producer::push_to_kafka;
-use exchange::consumer::read_from_kafka;
-use exchange::{push_to_azure, request_data, pull_from_azure};
+use exchange::request_data;
 use exchange::cli::{Cli, Command};
+use exchange::kafka::producer::push_to_kafka;
+use exchange::kafka::consumer::read_from_kafka;
+use exchange::azure::writer::push_to_azure;
+use exchange::azure::reader::pull_from_azure;
+
 
 use clap::*;
 use log::{info, warn, error};
-use serde_json::Value;
 
 #[tokio::main]
 async fn main() {

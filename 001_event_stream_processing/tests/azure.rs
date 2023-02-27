@@ -12,16 +12,14 @@
 // - The functions are tested by calling them and checking if the result is Ok
 #[cfg(test)]
 mod tests {
-    use exchange::{push_to_azure, pull_from_azure};
-    use exchange::{create_azure_container};
-    use exchange::{delete_azure_blob, delete_azure_container};
-
-    use rand::Rng;
+    use exchange::azure::writer::{push_to_azure};
+    use exchange::azure::helper::{create_azure_container, delete_azure_blob, delete_azure_container};
+    use exchange::azure::reader::{pull_from_azure};
 
     // Initalize the container name and filename as constants
-    const test_container_name: &str = "test";
-    const test_filename: &str = "data/test_file.json"; // local file
-    const test_blob_name: &str = "test_file.json";
+    const TEST_CONTAINER_NAME: &str = "test";
+    const TEST_FILENAME: &str = "data/test_file.json"; // local file
+    const TEST_BLOB_NAME: &str = "test_file.json";
 
     #[tokio::test]
     async fn test_crud_container() {
@@ -37,8 +35,8 @@ mod tests {
     #[tokio::test]
     async fn test_delete_from_azure() {
 
-        let result_create = push_to_azure(test_container_name, test_filename, test_blob_name).await;
-        let result_delete = delete_azure_blob(test_container_name, test_filename).await;
+        let result_create = push_to_azure(TEST_CONTAINER_NAME, TEST_FILENAME, TEST_BLOB_NAME).await;
+        let result_delete = delete_azure_blob(TEST_CONTAINER_NAME, TEST_FILENAME).await;
 
         assert!(result_create.is_ok());
         assert!(result_delete.is_ok());
@@ -48,13 +46,13 @@ mod tests {
     // - Should test for correct error handling
     #[tokio::test]
     async fn test_push_to_azure() {
-        let result = push_to_azure(test_container_name, test_filename, test_blob_name).await;
+        let result = push_to_azure(TEST_CONTAINER_NAME, TEST_FILENAME, TEST_BLOB_NAME).await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_pull_from_azure() {
-        let result = pull_from_azure(test_container_name, test_blob_name).await;
+        let result = pull_from_azure(TEST_CONTAINER_NAME, TEST_BLOB_NAME).await;
         assert!(result.is_ok());
     }
 }

@@ -11,12 +11,10 @@ mod tests {
     use std::sync::Arc;
     use std::time::Duration;
 
-    use exchange::client::{new_kafka_producer};
-    use exchange::producer::push_to_kafka;
-    use exchange::consumer::read_from_kafka;
+    use exchange::kafka::producer::{new_kafka_producer, push_to_kafka};
+    use exchange::kafka::consumer::{new_kafka_consumer, read_from_kafka};
     use exchange::request_data;
 
-    use rdkafka::error::KafkaError;
     use rdkafka::producer::FutureRecord;
     use rdkafka::util::Timeout;
 

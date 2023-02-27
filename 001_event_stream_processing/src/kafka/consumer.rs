@@ -10,7 +10,6 @@ use std::time::Duration;
 use bytecount::num_chars;
 use log::{warn, info};
 
-use crate::client::new_kafka_consumer;
 use crate::get_kafka_details;
 
 use rdkafka::error::{KafkaError, KafkaResult};
@@ -150,4 +149,27 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, HashM
         info!("Terminate listening for messages... (max retries reached)");
         info!("Message received: {}", message_counter);
         Ok((message_counter, message_content, message_bytes, total_bytes))
+}
+
+pub async fn new_kafka_consumer() -> BaseConsumer {
+    // read the kafka details from a file and store them in a vector
+    let kafka_details = get_kafka_details().unwrap();
+
+    // Assign details to variables (for readability)
+    let bootstrap_servers = kafka_details.bootstrap_servers;
+    let group_id = kafka_details.group_id;
+    let message_timeout_ms = kafka_details.message_timeout_ms;
+
+    // Create a new Kafka consumer (if not already existing)
+    let consumer: BaseConsumer = ClientConfig::new()
+        .set("bootstrap.servers", &bootstrap_servers)
+        .set("group.id", &group_id)
+        .set("message.timeout.ms", &message_timeout_ms.to_string())
+        .set("enable.auto.commit", "true")
+        .set("connections.max.idle.ms", "1000")
+        .create()
+        .expect("Error: Failed to create Kafka consumer");
+
+    // return the consumer
+    consumer
 }

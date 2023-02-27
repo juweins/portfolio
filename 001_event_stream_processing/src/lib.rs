@@ -2,26 +2,16 @@ mod config;
 mod errors;
 mod request;
 mod response;
-
-use log::{info, warn, error};
-use serde_json::json;
-use std::{collections::HashMap, io::Write};
-use std::time::Duration;
-
-use reqwest::Error;
-use errors::KeyError;
-use anyhow::anyhow;
-
 pub mod cli;
-pub mod client;
-pub mod consumer;
-pub mod producer;
+pub mod kafka;
+pub mod azure;
 
+use anyhow::anyhow;
 use config::{ApiDetails, AzureConfig, KafkaConfig};
-use response::{CatNinja,Exchange};
-
-use azure_storage::prelude::*;
-use azure_storage_blobs::prelude::*;
+use errors::KeyError;
+use log::{info, warn, error};
+use reqwest::Error;
+use std::{collections::HashMap};
 
 // TODO: Make the symbols dynamic by wrapping in a CLI argument
 /// Calls the API via HTTP Request
@@ -61,84 +51,6 @@ pub async fn request_data(api_name: &str) -> Result<serde_json::Value, anyhow::E
         .await?;
 
     Ok(response)
-}
-
-/// Pushes a file to Azure Blob Storage
-/// - Establishes a connection to Azure Blob Storage via azure_key.json
-/// - Reads the file to be pushed from the file system
-/// - Pushes the file to Azure Blob Storage
-/// - Returns a Result with the status of the operation
-pub async fn push_to_azure(container_name: &str, blob_name: &str, content: &str) -> azure_core::Result<()> {
-
-
-    let blob_client = get_az_client().blob_client(container_name, blob_name);
-    // Check if container exists
-    // - If not, create it
-    let container_exists = blob_client.container_client().exists().await?;
-    if !container_exists {
-        info!("Container {} does not exist. Creating...", container_name);
-
-        blob_client
-        .container_client()
-        .create()
-        .public_access(PublicAccess::None)
-        .await?;
-
-        info!("Successfully created container: {}", container_name);
-    }
-
-
-
-    // Create a Blob to store file
-    // TODO: As of now there is no way to receive the response status; Contribute?
-    let blob = blob_client
-        .put_block_blob(content.to_string())
-        .content_type("application/json")
-        .await?;
-    info!("Successfully created blob: {:?}", blob.request_id);
-
-    Ok(())
-}
-
-/// Pulls a file from Azure Blob Storage
-/// - Establishes a connection to Azure Blob Storage via azure_key.json
-/// - Pulls the file from Azure Blob Storage
-/// - Returns a Result with the status of the operation
-/// - Returns the file as a vector of bytes
-/// - Returns an error if the file is empty
-pub async fn pull_from_azure(container_name: &str, blob_name: &str) -> azure_core::Result<Vec<u8>> {
-
-    let blob_client = get_az_client().blob_client(container_name, blob_name);
-
-    // Get the blob
-    let blob = blob_client.get_content().await;
-    
-    // Unwrap the result
-    let blob = match blob {
-        Ok(content) => {
-
-            // If the blob is empty, return an error
-            if content.is_empty(){
-                let message = "Error retrieving blob data: Blob is empty!";
-                warn!("{}", message);
-                Err(azure_core::Error::message(azure_storage::ErrorKind::Other, message))
-            } else {
-                info!("Successfully retrieved blob: {:?}", blob_name);
-
-                // Create new file to store the retrieved blob content
-                let mut file = std::fs::File::create(blob_name).unwrap();
-                file.write(&content).unwrap();
-
-                Ok(content)
-            } 
-        }
-        Err(e) => {
-            error!("Error retrieving blob data: {}", e);
-            Err(e)
-        }
-    };
-    
-    blob
 }
 
 // Read the API key from a file
@@ -206,98 +118,6 @@ fn get_kafka_details() -> Result<KafkaConfig, Error> {
     )
     .unwrap();
     Ok(kafka_details)
-}
-
-/// Creates a container in Azure Blob Storage
-/// - Establishes a connection to Azure Blob Storage via azure_key.json
-/// - Creates the container in Azure Blob Storage
-pub async fn create_azure_container(container_name: &str) -> azure_core::Result<()> {
-
-    let blob_client = get_az_client().blob_client(container_name, "");
-
-    // Create the container
-    let container = blob_client.container_client().create().public_access(PublicAccess::None).await;
-    
-    // Unwrap the result
-    let container = match container {
-        Ok(_) => {
-            info!("Successfully created container: {}", container_name);
-            Ok(())
-        }
-        Err(e) => {
-            error!("Error creating container: {}", e);
-            Err(e)
-        }
-    };
-    
-    container
-}
-
-/// Delete a file from Azure Blob Storage
-/// - Establishes a connection to Azure Blob Storage via azure_key.json
-/// - Deletes the file from Azure Blob Storage
-pub async fn delete_azure_blob(container_name: &str, filename: &str) -> azure_core::Result<()> {
-
-    let blob_client = get_az_client().blob_client(container_name, filename);
-
-    // Delete the blob
-    let blob = blob_client.delete().await;
-    
-    // Unwrap the result
-    let blob = match blob {
-        Ok(_) => {
-            info!("Successfully deleted blob: {:?}", filename);
-            Ok(())
-        }
-        Err(e) => {
-            error!("Error deleting blob data: {}", e);
-            Err(e)
-        }
-    };
-    
-    blob
-}
-
-/// Deletes a container from Azure Blob Storage
-/// - Establishes a connection to Azure Blob Storage via azure_key.json
-/// - Deletes the container from Azure Blob Storage
-pub async fn delete_azure_container(container_name: &str) -> azure_core::Result<()> {
-
-    let blob_client = get_az_client().blob_client(container_name, "");
-    // Delete the container
-    let container = blob_client.container_client().delete().await;
-    
-    // Unwrap the result
-    let container = match container {
-        Ok(_) => {
-            info!("Successfully deleted container: {:?}", container_name);
-            Ok(())
-        }
-        Err(e) => {
-            error!("Error deleting container data: {}", e);
-            Err(e)
-        }
-    };
-    
-    container
-}
-
-/// Get client for Azure Blob Storage connection
-/// - Establishes a connection to Azure Blob Storage via azure_key.json
-pub fn get_az_client() -> ClientBuilder {
-    // Retrieve mandatory details from json file
-    let az_details = get_azure_details().unwrap();
-
-    // Assign details to variables
-    let account = az_details.storage_account_name;
-    let key = az_details.storage_account_key;
-
-    // Create a blob client
-    let storage_credentials = StorageCredentials::Key(account.clone(), key);
-    let client =
-        ClientBuilder::new(account, storage_credentials);
-
-    client
 }
 
 // --------------------

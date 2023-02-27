@@ -3,18 +3,15 @@
     It mimics the producer in the project setup
 */
 
-use crate::client::new_kafka_producer;
+use crate::get_kafka_details;
 
 use std::time::Duration;
-use std::io::Error;
-
-use bytecount::num_chars;
 use log::{warn, info};
 use uuid::Uuid;
 
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
-use rdkafka::error::{KafkaError, KafkaResult};
+use rdkafka::error::KafkaError;
 
 /// Pushes a message to the Kafka topic. (Kafka Producer)
 /// - Establishes a connection to the Kafka broker as defined in the kafka_key.json file
@@ -57,4 +54,29 @@ pub async fn push_to_kafka(topic_name: &str, message_content: &str) -> Result<(u
             Err(KafkaError::NoMessageReceived)
         }
     }
+}
+
+/// Creates a new Kafka producer
+/// - Reads the Kafka details from a file
+/// - Creates a new Kafka producer
+/// - Returns the producer
+pub async fn new_kafka_producer() -> FutureProducer {
+    // read the kafka details from a file and store them in a vector
+    let kafka_details = get_kafka_details().unwrap();
+
+    // Assign details to variables (for readability)
+    let bootstrap_servers = kafka_details.bootstrap_servers;
+    let group_id = kafka_details.group_id;
+    let message_timeout_ms = kafka_details.message_timeout_ms;
+
+    // Create a new Kafka producer (if not already existing)
+    let producer: &FutureProducer = &ClientConfig::new()
+        .set("bootstrap.servers", &bootstrap_servers)
+        .set("group.id", &group_id)
+        .set("message.timeout.ms", &message_timeout_ms.to_string())
+        .create()
+        .expect("Error: Failed to create Kafka producer");
+
+    // return the producer
+    producer.to_owned()
 }
