@@ -11,7 +11,7 @@ mod tests {
     use std::sync::Arc;
     use std::time::Duration;
 
-    use exchange::client::{new_kafka_producer, new_kafka_consumer};
+    use exchange::client::{new_kafka_producer};
     use exchange::producer::push_to_kafka;
     use exchange::consumer::read_from_kafka;
     use exchange::request_data;
@@ -19,14 +19,13 @@ mod tests {
     use rdkafka::error::KafkaError;
     use rdkafka::producer::FutureRecord;
     use rdkafka::util::Timeout;
-    use serde_json::Value;
 
     const TEST_API: &str = "test_api";
     const TEST_TOPIC: &str = "test";
     const TEST_MESSAGE: &str = "test_message";
     const TEST_MESSAGE_BYTES: u8 = 12;
     const TEST_KEY : &str = "00000000-0000-0000-0000-000000000000";
-    const TEST_FILE: &str = "example_response.json";
+    const TEST_FILE: &str = "data/example_response.json";
 
 
     #[tokio::test]
@@ -35,7 +34,7 @@ mod tests {
         let test_message = std::fs::read_to_string(TEST_FILE).unwrap();
         let test_message_bytes = bytecount::num_chars(test_message.as_bytes()) as u8;
 
-        let result = push_to_kafka(TEST_TOPIC, TEST_FILE).await.expect("Error: Failed to push to Kafka");
+        let result = push_to_kafka(TEST_TOPIC, &test_message).await.expect("Error: Failed to push to Kafka");
 
 
         let message_count = result.0;
@@ -43,7 +42,7 @@ mod tests {
         let key = result.2;
 
         assert_eq!(message_count, 1);
-        assert_eq!(message_size, TEST_MESSAGE_BYTES);
+        assert_eq!(message_size, test_message_bytes);
         assert_eq!(key.len(), 36);
     }
 

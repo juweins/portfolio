@@ -38,7 +38,7 @@ mod tests {
             .arg("--topic")
             .arg("test_topic")
             .arg("--ttl")
-            .arg("10")
+            .arg("1")
             .output()
             .expect("Failed to execute process");
 
@@ -128,7 +128,23 @@ mod tests {
         assert!(output.status.success());
     }
 
+    #[test]
+    fn test_menu_forward() {
+        let output = Command::new("cargo")
+            .arg("run")
+            .arg("--")
+            .arg("forward")
+            .arg("--topic")
+            .arg("test_topic")
+            .arg("--container-name")
+            .arg("test_container")
+            .arg("--file")
+            .arg("test_file.json")
+            .output()
+            .expect("Failed to execute process");
 
+        assert!(output.status.success());
+    }
 
     #[test]
     fn test_menu_version() {

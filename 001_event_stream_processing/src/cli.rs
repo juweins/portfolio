@@ -20,6 +20,7 @@ pub struct Cli {
 /// - Read: Read data from Azure Blob Storage
 /// - Request: Request data from external API
 /// - Ingest: Run the applications pipeline (Request -> Produce)
+/// - Forward: Forward data from one broker through an intermediate appicaltion to azure  (Consume -> Write)  
 /// - Config: Configure the application (API for Ingest)
 /// - Version: Get version information
 #[derive(clap::Subcommand)]
@@ -69,6 +70,16 @@ pub enum Command {
         api_name: String,
         #[clap(short, long, help = "Topic name for Producer")]
         topic: String,
+    },
+
+    #[clap(about = "Forward data from one broker through an intermediate appicaltion to azure")]
+    Forward {
+        #[clap(short, long, help = "Topic to read from")]
+        topic: String,
+        #[clap(short, long, help = "Container name for Azure Blob Storage")]
+        container_name: String,
+        #[clap(short, long, help = "File (or path) for Azure Blob Storage")]
+        filename: String,
     },
 
     #[clap(about = "Configure the application")]

@@ -30,24 +30,4 @@ mod tests {
         let result = request_data("not_configured_api").await;
         assert!(result.is_err());
     }
-
-    #[tokio::test]
-    async fn invalid_start_date() {
-        let result = request_data("exchangerates_api").await;
-        assert!(result.is_err());
-    }
-
-    #[tokio::test]
-    async fn invalid_end_date() {
-        let result = request_data("exchangerates_api").await;
-        assert!(result.is_err());
-    }
-
-    #[tokio::test]
-    async fn invalid_start_and_end_date() {
-        let result = request_data("exchangerates_api").await;
-        assert!(result.is_err());
-    }
-
-
 }

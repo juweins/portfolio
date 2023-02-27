@@ -1,6 +1,8 @@
 // WSL2/Ubuntu users: Make sure that you have pkg-config and libssl-dev installed!
 mod cli;
 
+use std::sync::Arc;
+
 use exchange::producer::push_to_kafka;
 use exchange::consumer::read_from_kafka;
 use exchange::{push_to_azure, request_data, pull_from_azure};
@@ -108,6 +110,49 @@ async fn main() {
             info!("Data ingest from API {} complete", &api_name)
 
         },
+
+        Command::Forward{topic, container_name, filename} => {
+            info!("Forwarder selected");
+
+            let blob_name = filename; // I find it confusing to call the cli with blob_name directly
+            let mut content = String::new();
+
+            let consumer = match read_from_kafka(&topic, 2).await {
+                Ok(consumer) => Some(consumer),
+                Err(e) => {
+                    error!("Error while reading data from Kafka: {}", e);
+                    None
+                }
+            };
+
+            let _result = match consumer {
+                Some(consumer) => {
+                    // Check if message count is 0
+                    if consumer.0 == 0 {
+                        // The content should not be pushed to Azure Blob Storage since it results in an overwrite by default
+                        warn!("No data received from Kafka: Skipping push to Azure Blob Storage");
+                        return;
+                    }
+
+                    info!("Message(s) read from Kafka: {}", consumer.0);
+                    // Create json from hashmap
+                    content = serde_json::to_value(consumer.1).unwrap().to_string();
+
+                },
+                
+                None => {
+                    error!("No data received from Kafka: Check Kafka logs for more information");
+                    return;
+                }
+            };
+
+            let _write = match push_to_azure(&container_name, &blob_name, &content).await {
+                Ok(_) => info!("Data pushed to Azure Blob Storage {} successfully", &container_name),
+                Err(e) => error!("Error while pushing data to Azure Blob Storage {}: {}", &container_name, e)
+            };
+
+        },
+
 
         Command::Config { name, url, key } => {
             info!("Configurator selected");

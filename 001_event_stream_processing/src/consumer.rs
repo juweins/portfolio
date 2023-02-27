@@ -128,7 +128,7 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, HashM
                     warn!("Unexpected empty message");
                     warn!("Shutting down consumer");
                     // Looking at implementations in other languages (e.g. Java)
-                    // There is no complement to wakeup() / close() function in rdkafka
+                    // There is no complement to wakeup() / close() function in rdkafka gracefully
                     // Therefore, we break the loop with an empty message
                     break;
                 }

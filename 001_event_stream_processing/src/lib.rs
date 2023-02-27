@@ -68,10 +68,8 @@ pub async fn request_data(api_name: &str) -> Result<serde_json::Value, anyhow::E
 /// - Reads the file to be pushed from the file system
 /// - Pushes the file to Azure Blob Storage
 /// - Returns a Result with the status of the operation
-pub async fn push_to_azure(container_name: &str, filename: &str, blob_name: &str) -> azure_core::Result<()> {
-    // Temporary: Read a saved response from a file
-    // This is to avoid hitting the API limit early on
-    let blob_body = std::fs::read(filename).unwrap();
+pub async fn push_to_azure(container_name: &str, blob_name: &str, content: &str) -> azure_core::Result<()> {
+
 
     let blob_client = get_az_client().blob_client(container_name, blob_name);
     // Check if container exists
@@ -94,10 +92,10 @@ pub async fn push_to_azure(container_name: &str, filename: &str, blob_name: &str
     // Create a Blob to store file
     // TODO: As of now there is no way to receive the response status; Contribute?
     let blob = blob_client
-        .put_block_blob(blob_body)
+        .put_block_blob(content.to_string())
         .content_type("application/json")
         .await?;
-    println!("Successfully created blob: {:?}", blob.request_id);
+    info!("Successfully created blob: {:?}", blob.request_id);
 
     Ok(())
 }

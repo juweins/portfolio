@@ -20,7 +20,7 @@ mod tests {
 
     // Initalize the container name and filename as constants
     const test_container_name: &str = "test";
-    const test_filename: &str = "data/test_file.json";
+    const test_filename: &str = "data/test_file.json"; // local file
     const test_blob_name: &str = "test_file.json";
 
     #[tokio::test]
@@ -54,7 +54,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_pull_from_azure() {
-        let result = pull_from_azure(test_container_name, test_filename).await;
+        let result = pull_from_azure(test_container_name, test_blob_name).await;
         assert!(result.is_ok());
     }
 }
