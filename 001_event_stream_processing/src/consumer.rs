@@ -102,6 +102,9 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, HashM
 
             // If the stream is not idle, reset the retry counter
             retry_counter = 0;
+            
+            // Increase the message counter
+            message_counter += 1;
 
             // Convert the message to a readable string in stdout
             match msg {
@@ -114,10 +117,8 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, HashM
 
                     // Print the message (debugging/development)
                     // TODO: change this before 1.0.0 // to info!()
-                    println!("Message: {}", String::from_utf8(message).unwrap());
-                    consumer.commit_message(&m, CommitMode::Async).unwrap();
-                    // Increase the message counter
-                    message_counter += 1;
+                    info!("Message: {}", String::from_utf8(message).unwrap());
+                    consumer.commit_message(&m, CommitMode::Sync).unwrap();
 
                 },
                 Some(Err(e)) => {

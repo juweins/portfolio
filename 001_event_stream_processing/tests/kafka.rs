@@ -58,6 +58,13 @@ mod tests {
         // Create a new Kafka producer (Consumer is not working here, yet)
         let push = new_kafka_producer().await;
 
+        // Send consumer in a background thread to avoid blocking
+        // Capture the result in a variable for testing
+        // TTL is set to 2 second to run quickly
+        let consumer = tokio::spawn(async move {
+            let result = read_from_kafka(test_read_topic, 2).await;
+            result
+        });
         // Push a message to the topic
         // Capture result to test for successful producer push
         let producer = push.send(
@@ -67,25 +74,18 @@ mod tests {
             Timeout::After(Duration::from_secs(1)),
         ).await;
 
-                // Send consumer in a background thread to avoid blocking
-        // Capture the result in a variable for testing
-        // TTL is set to 2 second to run quickly
-        let consumer = tokio::spawn(async move {
-            let result = read_from_kafka(test_read_topic, 2).await;
-            result
-        });
-
         // Wait for the consumer to finish by timeout (idle mode)
         let result = consumer.await.unwrap().expect("Error: Consumer failed to read from Kafka");
 
         let message_count = result.0;
+        let message_content = result.1.get(&1).unwrap(); // since message_count is 1, the message index starts with 1
         let message_size = result.2;
         let total_size = result.3;
 
         // Check if tasks were successful
         assert!(producer.is_ok());
         assert_eq!(message_count, 1);
-        //assert_eq!(message_content, TEST_MESSAGE);
+        assert_eq!(message_content, TEST_MESSAGE);
         assert_eq!(message_size[0], TEST_MESSAGE_BYTES); // Only one message is pushed atm.
         assert_eq!(total_size, TEST_MESSAGE_BYTES as u32); // Should therefore be the same as the message size
     }
