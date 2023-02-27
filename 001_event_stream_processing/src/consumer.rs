@@ -4,6 +4,7 @@
 */
 
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::Duration;
 
 use bytecount::num_chars;
@@ -23,7 +24,7 @@ use rdkafka::consumer::{Consumer,BaseConsumer, CommitMode};
 /// - Reads the messages from the topic
 /// 
 /// - Returns a tuple (total number of messages read, byte size of the individual messages, total byte size transmitted)
-pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<Vec<u8>>,Vec<u8>, u32), KafkaError>{
+pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, HashMap<u8, String>,Vec<u8>, u32), KafkaError>{
 
     // TODO: Why does calling new_kafka_consumer() here not work?
     // - It works in the producer.rs file
@@ -65,7 +66,7 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<V
     let mut message_bytes: Vec<u8> = Vec::new();
 
     // Initialize a vector to store all messages as strings
-    let mut message_content: Vec<Vec<u8>> = Vec::new();
+    let mut message_content: HashMap<u8, String> = HashMap::new();
 
 
 
@@ -102,15 +103,11 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<V
             // If the stream is not idle, reset the retry counter
             retry_counter = 0;
 
-            // Increase the message counter
-            message_counter += 1;
-
-
             // Convert the message to a readable string in stdout
             match msg {
                 Some(Ok(m)) => {
                     let message = m.payload().unwrap().to_owned();
-                    message_content.push(message.clone());
+                    message_content.insert(message_counter, String::from_utf8(message.clone()).unwrap());
 
                     let bytes_received = bytecount::num_chars(&message) as u8;
                     message_bytes.push(bytes_received);
@@ -119,6 +116,9 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, Vec<V
                     // TODO: change this before 1.0.0 // to info!()
                     println!("Message: {}", String::from_utf8(message).unwrap());
                     consumer.commit_message(&m, CommitMode::Async).unwrap();
+                    // Increase the message counter
+                    message_counter += 1;
+
                 },
                 Some(Err(e)) => {
                     warn!("Error while reading from stream: {}", e);
