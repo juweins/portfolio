@@ -9,4 +9,3 @@ terraform.tfstate.backup
 .vscode
 
 # exclude config
-*_config.json

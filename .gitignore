@@ -6,6 +6,6 @@ target
 
 
 ## exclude kafka server directory
-kafka_*
+kafka_2*
 
 !UWwQ&h8CAFQ

@@ -1,0 +1,6 @@
+{
+    "bootstrap_servers": "localhost:9092",
+    "group_id": "kafka-node-group",
+    "message_timeout_ms": 6000,
+    "connection_max_idle_ms": 1000
+}
