@@ -9,7 +9,6 @@ use exchange::azure::reader::pull_from_azure;
 
 use clap::*;
 use log::{info, warn, error};
-use subprocess::Exec;
 
 #[tokio::main]
 async fn main() {

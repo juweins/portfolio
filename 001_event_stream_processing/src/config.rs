@@ -14,6 +14,8 @@ pub struct KafkaConfig {
 pub struct AzureConfig {
     pub storage_account_name: String,
     pub storage_account_key: String,
+    pub storage_container: String,
+    pub storage_blob_name: String,
 }
 
 // structs for the api_key.json file
@@ -21,6 +23,8 @@ pub struct AzureConfig {
 pub struct ApiDetails {
     pub url: String,
     pub apikey: String,
+    pub description: String,
+    pub category: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

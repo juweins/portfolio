@@ -61,7 +61,7 @@ pub async fn request_data(api_name: &str) -> Result<serde_json::Value, anyhow::E
 fn get_api_key(api_name: &str) -> Result<String, KeyError> {
     // read the api_key.json and retrieve the api key by name
     let api_details = serde_json::from_str::<HashMap<String, ApiDetails>>(
-        &std::fs::read_to_string("secrets/api_key.json").unwrap(),
+        &std::fs::read_to_string("config/api_config.json").unwrap(),
     )
     .unwrap();
 
@@ -83,7 +83,7 @@ fn get_api_key(api_name: &str) -> Result<String, KeyError> {
 fn get_api_url(api_name: &str) -> Result<String, KeyError> {
     // read the api_key.json and retrieve the api key by name
     let api_details = serde_json::from_str::<HashMap<String, ApiDetails>>(
-        &std::fs::read_to_string("secrets/api_key.json").unwrap(),
+        &std::fs::read_to_string("config/api_config.json").unwrap(),
     )
     .unwrap();
 
@@ -104,7 +104,7 @@ fn get_api_url(api_name: &str) -> Result<String, KeyError> {
 fn get_azure_details() -> Result<AzureConfig, Error> {
     // Read the azure details from a file and store them in a vector
     let azure_details = serde_json::from_str::<AzureConfig>(
-        &std::fs::read_to_string("secrets/azure_key.json").unwrap(),
+        &std::fs::read_to_string("config/azure_config.json").unwrap(),
     )
     .unwrap();
     Ok(azure_details)
@@ -115,7 +115,7 @@ fn get_azure_details() -> Result<AzureConfig, Error> {
 fn get_kafka_details() -> Result<KafkaConfig, Error> {
     // Read the kafka details from a file and store them in a vector
     let kafka_details = serde_json::from_str::<KafkaConfig>(
-        &std::fs::read_to_string("secrets/kafka_key.json").unwrap(),
+        &std::fs::read_to_string("config/kafka_config.json").unwrap(),
     )
     .unwrap();
     Ok(kafka_details)
@@ -127,9 +127,10 @@ fn get_kafka_details() -> Result<KafkaConfig, Error> {
 // Unit tests
 // --------------------
 
-// Test the get_api_key function
-// - The API key is stored in a file and read by the function
-// - The returned value should be a string
+#[cfg(test)]
+mod tests {
+    use super::*;
+
 #[test]
 fn test_get_api_key() {
     let result = get_api_key("exchangerates_api");
@@ -160,20 +161,15 @@ fn test_valid_api_url() {
     assert!(&result.unwrap().is_ascii());
 }
 
-// Test the get_azure_details function
-// - The Azure details are stored in a file and read by the function
-// - The file should be read successfully
 #[test]
 fn valid_azure_details() {
     let result = get_azure_details();
     assert!(result.is_ok());
 }
 
-// Test the get_kafka_details function
-// - The Kafka details are stored in a file and read by the function
-// - The file should be read successfully
 #[test]
 fn valid_kafka_details() {
     let result = get_kafka_details();
     assert!(result.is_ok());
+}
 }

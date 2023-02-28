@@ -1,7 +1,7 @@
 # exclude development files
-secrets/api_key.json
-secrets/azure_key.json
-secrets/kafka_key.json
+secret/api_key.json
+secret/azure_key.json
+secret/kafka_key.json
 data/*
 
 # exclude terraform files

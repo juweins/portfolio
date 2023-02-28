@@ -44,3 +44,18 @@ For this I had to change the function signature of the request function. Instead
 
 ### 3. Implemented the azure read function. (& extended the CLI app)
 This function reads the data from the azure blob storage as defined in the config file. I will probably need the function in a future feature, for now it is just implemented for completeness.
+
+## 2023 KW 10
+This week I have been working on the following:
+
+### 1. Finalized the azure write function
+
+### 2. Reorganized the codebase
+In order to keep the project maintainable, I decided to move azure functions into a dedicated directory. By doing so, I also moved the kafka files into theirs. This way I can keep the codebase clean and easy to navigate.
+
+### 3. Implemented the Config command
+First, I wanted to implement get/set config functions to edit each config precisely. However, I found it more convenient (and easier to implement) to just edit the config file directly via nano/vim. This way I can also use the config file as a template for the user. The config command therefore just opens the file and lets the user edit it. This is a good compromise between usability and maintainability.
+
+### 4. Set up the terraform infrastructure
+Despite the original plan I decided to leverage the true strength of rust and use a ephemeral azure function (aws lambda complement) to run the application. This way I can easily deploy the application to the cloud and run it as a service. I will probably use the azure function to run directly. Another way, that I am investigation at the moment is putting the application in a docker container.
+Deploying the binary on a dedicated VM is kind of a overkill, since the application is not that compute intensive - the costs would also be too high.

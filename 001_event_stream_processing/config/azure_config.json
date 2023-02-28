@@ -1,1 +1,6 @@
-{}
+{
+    "storage_account_name": "storageaccountname",
+    "storage_account_key": "storageaccountkey",
+    "storage_container": "storage-inbound",
+    "storage_blob_name": "blob-storage-inbound"
+}
