@@ -5,7 +5,7 @@ This repository contains some showcase projects for my personal branding. I am a
 Please do not hesitate to provide feedback. Suggestions, questions or comments? Feel free to contact me!
 
 ## Projects
-All of my currently available projects are listed below. The projects **do not** have a specific order, nor do I try to use as many technologies as possible. I am trying to showcase my skills in a way that is easy to understand,fun to read and may expand your knowledge. In addition to that, the projects have a dedicated section for further steps, e.g. on how they can be transitioned into production. (Things that make no sense in a showcase project, but are essential in a production environment.)
+All of my currently available projects are listed below. The projects **do not** have a specific order, nor do I try to use as many technologies as possible. I am trying to showcase my skills in a way that is easy to understand,fun to read and may expand your knowledge.
 
 ### **001 - Event Stream Processing**
 In this project, I am using Apache Kafka to ingest data from an API into my Azure Account. The API is a free API from APIlayer. I chose to use a exchange rate API to simulate a real-world use case in which one would like to ingest a unsteady, but continuous stream of data. The data gets processed by a simple Kafka cluster on a azure VM.
@@ -14,9 +14,6 @@ I chose to code it in 🦀Rust, since I am currently expanding my knowledge besi
 #### Project overview:
 
 ![Project overview](readme_resources/001_event_stream_processing.png)
-
-
-
 
 ## License
 The projects in this repository are licensed under the MIT License. See the [LICENSE](LICENSE) file for details. Feel free to use the code for your own projects. If you do so, please provide a link to this repository.
