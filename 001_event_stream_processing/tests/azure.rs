@@ -51,7 +51,7 @@ mod tests {
     #[tokio::test]
     async fn test_pull_from_azure() {
         let _ = push_to_azure(TEST_CONTAINER_NAME, TEST_FILENAME, TEST_BLOB_NAME).await;
-        let result = pull_from_azure(TEST_CONTAINER_NAME, TEST_FILENAME).await;
+        let result = pull_from_azure(TEST_CONTAINER_NAME, TEST_BLOB_NAME).await;
         let _ = delete_azure_blob(TEST_CONTAINER_NAME, TEST_BLOB_NAME).await;
         assert!(result.is_ok());
     }
