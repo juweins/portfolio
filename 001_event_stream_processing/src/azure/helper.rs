@@ -131,40 +131,45 @@ pub async fn delete_azure_container(container_name: &str) -> azure_core::Result<
 // -----------
 // Unit Tests
 // -----------
+#[cfg(test)]
+mod tests{
+    use super::*;
+    const TEST_CONTAINER : &str = "test";
+    const TEST_CONTAINER_TO_DELETE: &str = "testodelete";
+    const TEST_FILE : &str = "test.json";
+    const TEST_DATA : &str = "{ \"test\": \"test\" }";
 
-const TEST_CONTAINER : &str = "test";
-const TEST_FILE : &str = "test.txt";
-const TEST_DATA : &str = "{ \"test\": \"test\" }";
+    #[test]
+    fn test_get_az_client() {
+        // untestable as per crate (azure_storage)
+        // TODO: find a way to test this
+    }
 
-#[test]
-fn test_get_az_client() {
-    // untestable as per crate (azure_storage)
-    // TODO: find a way to test this
+    #[tokio::test]
+    async fn test_create_azure_blob() {
+        let _ = create_azure_container(TEST_CONTAINER).await;
+        let result = create_azure_blob(TEST_CONTAINER, TEST_FILE, TEST_DATA.as_bytes().to_vec()).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_delete_azure_blob() {
+        let _ = create_azure_container(TEST_CONTAINER).await;
+        let result = delete_azure_blob(TEST_CONTAINER, TEST_FILE).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_create_azure_container() {
+        let result = create_azure_container(TEST_CONTAINER_TO_DELETE).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_delete_azure_container() {
+        let result = delete_azure_container(TEST_CONTAINER_TO_DELETE).await;
+        assert!(result.is_ok());
+    }
+
 }
-
-#[tokio::test]
-async fn test_create_azure_blob() {
-    let result = create_azure_blob(TEST_CONTAINER, TEST_FILE, TEST_DATA.as_bytes().to_vec()).await;
-    assert!(result.is_ok());
-}
-
-#[tokio::test]
-async fn test_delete_azure_blob() {
-    let result = delete_azure_blob(TEST_CONTAINER, TEST_FILE).await;
-    assert!(result.is_ok());
-}
-
-#[tokio::test]
-async fn test_create_azure_container() {
-    let result = create_azure_container(TEST_CONTAINER).await;
-    assert!(result.is_ok());
-}
-
-#[tokio::test]
-async fn test_delete_azure_container() {
-    let result = delete_azure_container(TEST_CONTAINER).await;
-    assert!(result.is_ok());
-}
-
-
 

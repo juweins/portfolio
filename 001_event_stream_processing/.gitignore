@@ -7,3 +7,6 @@ terraform.tfstate.backup
 
 # exclude personal files
 .vscode
+
+# exclude config
+*_config.json
