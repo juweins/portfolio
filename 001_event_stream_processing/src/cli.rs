@@ -85,11 +85,11 @@ pub enum Command {
     #[clap(about = "Configure the application")]
     Config {
         #[clap(short, long, help = "Name of the API")]
-        name: String,
-        #[clap(short, long, help = "URL of the API")]
+        config_file: String,
+/*         #[clap(short, long, help = "URL of the API")]
         url: String,
         #[clap(short, long, help = "API key")]
-        key: String,
+        key: String, */
     },
 
     #[clap(about = "Get version information")]

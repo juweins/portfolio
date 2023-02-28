@@ -7,9 +7,9 @@ use exchange::kafka::consumer::read_from_kafka;
 use exchange::azure::writer::push_to_azure;
 use exchange::azure::reader::pull_from_azure;
 
-
 use clap::*;
 use log::{info, warn, error};
+use subprocess::Exec;
 
 #[tokio::main]
 async fn main() {
@@ -153,11 +153,24 @@ async fn main() {
         },
 
 
-        Command::Config { name, url, key } => {
+        Command::Config { config_file } => {
             info!("Configurator selected");
-            info!("API: {}, URL: {}, API Key: {}", &name, &url, &key);
-            error!("Configurator not implemented yet! No entries have been added.");
-            // TODO: Add Configurator logic
+            //info!("API: {}, URL: {}, API Key: {}", &name, &url, &key);
+            // get cwd
+            let cwd = std::env::current_dir().unwrap()
+                .into_os_string()
+                .into_string()
+                .unwrap();
+            // Build path
+            let path = format!("{}/config/{}.json", cwd, config_file);
+            println!("Path: {}", path);
+
+
+            // open file with vim
+            subprocess::Exec::cmd("nano")
+                .arg(path)
+                .join()
+                .expect("Error: Failed to run editor");
         },
 
         Command::Version => {

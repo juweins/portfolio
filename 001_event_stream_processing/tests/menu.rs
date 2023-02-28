@@ -95,24 +95,6 @@ mod tests {
     }
 
     #[test]
-    fn test_menu_config() {
-        let output = Command::new("cargo")
-            .arg("run")
-            .arg("--")
-            .arg("config")
-            .arg("--name")
-            .arg("example")
-            .arg("--url")
-            .arg("some_url")
-            .arg("--key")
-            .arg("some_api_key")
-            .output()
-            .expect("Failed to execute process");
-
-        assert!(output.status.success());
-    }
-
-    #[test]
     fn test_menu_ingest() {
         let output = Command::new("cargo")
             .arg("run")

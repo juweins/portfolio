@@ -11,6 +11,7 @@ use config::{ApiDetails, AzureConfig, KafkaConfig};
 use errors::KeyError;
 use log::{info, warn, error};
 use reqwest::Error;
+use jsonschema::{Draft, JSONSchema};
 use std::{collections::HashMap};
 
 // TODO: Make the symbols dynamic by wrapping in a CLI argument
@@ -53,7 +54,7 @@ pub async fn request_data(api_name: &str) -> Result<serde_json::Value, anyhow::E
     Ok(response)
 }
 
-// Read the API key from a file
+/// Read the API key from a file
 // Since there are multiple keys present an api_name parameter is required
 // - Custom error type for keys
 // TODO: Make this more secure by using a key vault
@@ -76,7 +77,7 @@ fn get_api_key(api_name: &str) -> Result<String, KeyError> {
     }
 }
 
-// Read the API url from a file
+/// Read the API url from a file
 // Since there are multiple urls present an api_name parameter is required
 // - Custom error type for urls
 fn get_api_url(api_name: &str) -> Result<String, KeyError> {
@@ -98,7 +99,7 @@ fn get_api_url(api_name: &str) -> Result<String, KeyError> {
     }
 }
 
-// Read the Azure details from a file
+/// Read the Azure details from a file
 // - Returns a AzureConfig struct
 fn get_azure_details() -> Result<AzureConfig, Error> {
     // Read the azure details from a file and store them in a vector
@@ -109,7 +110,7 @@ fn get_azure_details() -> Result<AzureConfig, Error> {
     Ok(azure_details)
 }
 
-// Read the Kafka details from a file
+/// Read the Kafka details from a file
 // - Returns a KafkaConfig struct
 fn get_kafka_details() -> Result<KafkaConfig, Error> {
     // Read the kafka details from a file and store them in a vector
