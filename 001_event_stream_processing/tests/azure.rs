@@ -2,10 +2,9 @@
     This file contains the integration tests for the azure parts
     - The tests are run by calling cargo test
     - The azure related functions are:
+        - create_and_delete_container
         - push_data
         - pull_data
-        - delete_data
-        - delete_container
 */
 
 // Test the pull/push functions (request_data and push_data)
@@ -42,17 +41,18 @@ mod tests {
         assert!(result_delete.is_ok());
     }
 
-    // TODO: Test for alternative container/filename combinations
-    // - Should test for correct error handling
     #[tokio::test]
     async fn test_push_to_azure() {
         let result = push_to_azure(TEST_CONTAINER_NAME, TEST_FILENAME, TEST_BLOB_NAME).await;
+        let _ = delete_azure_blob(TEST_CONTAINER_NAME, TEST_BLOB_NAME).await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_pull_from_azure() {
-        let result = pull_from_azure(TEST_CONTAINER_NAME, TEST_BLOB_NAME).await;
+        let _ = push_to_azure(TEST_CONTAINER_NAME, TEST_FILENAME, TEST_BLOB_NAME).await;
+        let result = pull_from_azure(TEST_CONTAINER_NAME, TEST_FILENAME).await;
+        let _ = delete_azure_blob(TEST_CONTAINER_NAME, TEST_BLOB_NAME).await;
         assert!(result.is_ok());
     }
 }

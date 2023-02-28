@@ -1,9 +1,12 @@
+/*
+    This file contains the function that pushes data to Azure Blob Storage
+*/
+
 use azure_storage_blobs::prelude::PublicAccess;
 use log::{info, warn, error};
 
-use crate::azure::helper::get_az_client;
-
-
+use crate::azure::helper::{get_az_client, create_azure_container};
+use super::helper::create_azure_blob;
 
 
 /// Pushes a file to Azure Blob Storage
@@ -13,32 +16,17 @@ use crate::azure::helper::get_az_client;
 /// - Returns a Result with the status of the operation
 pub async fn push_to_azure(container_name: &str, blob_name: &str, content: &str) -> azure_core::Result<()> {
 
-
     let blob_client = get_az_client().blob_client(container_name, blob_name);
     // Check if container exists
     // - If not, create it
     let container_exists = blob_client.container_client().exists().await?;
     if !container_exists {
-        info!("Container {} does not exist. Creating...", container_name);
-
-        blob_client
-        .container_client()
-        .create()
-        .public_access(PublicAccess::None)
-        .await?;
-
-        info!("Successfully created container: {}", container_name);
+        warn!("Container {} does not exist. Creating...", container_name);
+        let _container = create_azure_container(container_name).await?;
     }
 
-
-
-    // Create a Blob to store file
-    // TODO: As of now there is no way to receive the response status; Contribute?
-    let blob = blob_client
-        .put_block_blob(content.to_string())
-        .content_type("application/json")
-        .await?;
-    info!("Successfully created blob: {:?}", blob.request_id);
+    // Create a Blob and push file
+    let _blob = create_azure_blob(container_name, blob_name, content.as_bytes().to_vec()).await?;
 
     Ok(())
 }

@@ -1,6 +1,9 @@
-use std::io::Write;
+/*
+    This file contains the function that pulls data from Azure Blob Storage
+*/
 
 use log::{info, warn, error};
+use std::io::Write;
 
 use crate::azure::helper::get_az_client;
 

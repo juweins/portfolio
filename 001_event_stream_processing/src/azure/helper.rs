@@ -7,6 +7,7 @@ use azure_storage::StorageCredentials;
 use azure_storage_blobs::prelude::{ClientBuilder, PublicAccess};
 
 use log::{info, warn, error};
+use uuid::Uuid;
 
 /// Get client for Azure Blob Storage connection
 /// - Establishes a connection to Azure Blob Storage via azure_key.json
@@ -30,18 +31,18 @@ pub fn get_az_client() -> ClientBuilder {
 /// - Creates the container in Azure Blob Storage
 /// - Sets the container to public access
 /// - Returns the container name
-pub async fn create_azure_blob(container_name: &str, filename: &str, data: Vec<u8>) -> azure_core::Result<String> {
+pub async fn create_azure_blob(container_name: &str, filename: &str, data: Vec<u8>) -> azure_core::Result<Uuid> {
 
     let blob_client = get_az_client().blob_client(container_name, filename);
 
     // Create the blob
-    let blob = blob_client.put_block_blob(data).content_type("text/plain").await;
+    let blob = blob_client.put_block_blob(data).content_type("application/json").await;
     
     // Unwrap the result
     let blob = match blob {
-        Ok(_) => {
-            info!("Successfully created blob: {:?}", filename);
-            Ok(container_name.to_string())
+        Ok(blob) => {
+            info!("Successfully created blob {}: {:?}", filename, blob.request_id);
+            Ok(blob.request_id)
         }
         Err(e) => {
             error!("Error creating blob data: {}", e);
@@ -118,6 +119,7 @@ pub async fn delete_azure_container(container_name: &str) -> azure_core::Result<
             Ok(())
         }
         Err(e) => {
+            
             error!("Error deleting container data: {}", e);
             Err(e)
         }
@@ -132,11 +134,11 @@ pub async fn delete_azure_container(container_name: &str) -> azure_core::Result<
 
 const TEST_CONTAINER : &str = "test";
 const TEST_FILE : &str = "test.txt";
-const TEST_DATA : &str = "test data";
+const TEST_DATA : &str = "{ \"test\": \"test\" }";
 
 #[test]
 fn test_get_az_client() {
-    // untestable as per library (azure_storage)
+    // untestable as per crate (azure_storage)
     // TODO: find a way to test this
 }
 
@@ -153,13 +155,15 @@ async fn test_delete_azure_blob() {
 }
 
 #[tokio::test]
-async fn test_delete_azure_container() {
-    let result = delete_azure_container(TEST_CONTAINER).await;
+async fn test_create_azure_container() {
+    let result = create_azure_container(TEST_CONTAINER).await;
+    assert!(result.is_ok());
 }
 
 #[tokio::test]
-async fn test_create_azure_container() {
-    let result = create_azure_container(TEST_CONTAINER).await;
+async fn test_delete_azure_container() {
+    let result = delete_azure_container(TEST_CONTAINER).await;
+    assert!(result.is_ok());
 }
 
 
