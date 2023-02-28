@@ -2,8 +2,6 @@
 
 This repository contains some showcase projects for my personal branding. I am a software developer and I am passionate about programming. I am also a big fan of open source software and I am always looking for new ways to improve my skills. Currently, I am returning to Software Engineering after a personal break where I studied horticultural engineering. 
 
-I try to add new projects to this repository at least every two weeks. 
-
 Please do not hesitate to provide feedback. Suggestions, questions or comments? Feel free to contact me!
 
 ## Projects
