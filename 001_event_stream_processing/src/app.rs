@@ -154,18 +154,12 @@ async fn main() {
 
         Command::Config { config_file } => {
             info!("Configurator selected");
-            //info!("API: {}, URL: {}, API Key: {}", &name, &url, &key);
-            // get cwd
-            let cwd = std::env::current_dir().unwrap()
-                .into_os_string()
-                .into_string()
-                .unwrap();
+
             // Build path
-            let path = format!("{}/config/{}.json", cwd, config_file);
-            println!("Path: {}", path);
+            let mut path = format!("~/.config/exchange/{}.json", config_file);
+            path = shellexpand::tilde(&path).to_string();
 
-
-            // open file with vim
+            // open file with nano
             subprocess::Exec::cmd("nano")
                 .arg(path)
                 .join()

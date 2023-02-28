@@ -59,9 +59,12 @@ pub async fn request_data(api_name: &str) -> Result<serde_json::Value, anyhow::E
 // - Custom error type for keys
 // TODO: Make this more secure by using a key vault
 fn get_api_key(api_name: &str) -> Result<String, KeyError> {
+
+    // expand the path to the config file
+    let path = shellexpand::tilde("~/.config/exchange/api_config.json").to_string();
     // read the api_key.json and retrieve the api key by name
     let api_details = serde_json::from_str::<HashMap<String, ApiDetails>>(
-        &std::fs::read_to_string("config/api_config.json").unwrap(),
+        &std::fs::read_to_string(path).unwrap(),
     )
     .unwrap();
 
@@ -81,9 +84,12 @@ fn get_api_key(api_name: &str) -> Result<String, KeyError> {
 // Since there are multiple urls present an api_name parameter is required
 // - Custom error type for urls
 fn get_api_url(api_name: &str) -> Result<String, KeyError> {
+
+    //expand the path to the config file
+    let path = shellexpand::tilde("~/.config/exchange/api_config.json").to_string();
     // read the api_key.json and retrieve the api key by name
     let api_details = serde_json::from_str::<HashMap<String, ApiDetails>>(
-        &std::fs::read_to_string("config/api_config.json").unwrap(),
+        &std::fs::read_to_string(path).unwrap(),
     )
     .unwrap();
 
@@ -102,9 +108,12 @@ fn get_api_url(api_name: &str) -> Result<String, KeyError> {
 /// Read the Azure details from a file
 // - Returns a AzureConfig struct
 fn get_azure_details() -> Result<AzureConfig, Error> {
+
+    // expand the path to the config file
+    let path = shellexpand::tilde("~/.config/exchange/azure_config.json").to_string();
     // Read the azure details from a file and store them in a vector
     let azure_details = serde_json::from_str::<AzureConfig>(
-        &std::fs::read_to_string("config/azure_config.json").unwrap(),
+        &std::fs::read_to_string(path).unwrap(),
     )
     .unwrap();
     Ok(azure_details)
@@ -113,9 +122,13 @@ fn get_azure_details() -> Result<AzureConfig, Error> {
 /// Read the Kafka details from a file
 // - Returns a KafkaConfig struct
 fn get_kafka_details() -> Result<KafkaConfig, Error> {
+
+    // expand the path to the config file
+    let path = shellexpand::tilde("~/.config/exchange/kafka_config.json").to_string();
+
     // Read the kafka details from a file and store them in a vector
     let kafka_details = serde_json::from_str::<KafkaConfig>(
-        &std::fs::read_to_string("config/kafka_config.json").unwrap(),
+        &std::fs::read_to_string(path).unwrap(),
     )
     .unwrap();
     Ok(kafka_details)
