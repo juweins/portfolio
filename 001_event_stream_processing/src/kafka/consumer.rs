@@ -45,13 +45,14 @@ pub async fn read_from_kafka(topic: &str, time_to_live: u8) -> Result<(u8, HashM
     let bootstrap_servers = kafka_details.bootstrap_servers;
     let group_id = kafka_details.group_id;
     let message_timeout_ms = kafka_details.message_timeout_ms;
+    let connection_max_idle_ms = kafka_details.connection_max_idle_ms;
 
     // Create a new Kafka consumer (if not already existing)
     let consumer: &BaseConsumer = &ClientConfig::new()
         .set("bootstrap.servers", &bootstrap_servers)
         .set("group.id", &group_id)
         .set("message.timeout.ms", &message_timeout_ms.to_string())
-        .set("connections.max.idle.ms", "1000")
+        .set("connections.max.idle.ms", &connection_max_idle_ms.to_string())
         .create()
         .expect("Error: Failed to create Kafka consumer");
 

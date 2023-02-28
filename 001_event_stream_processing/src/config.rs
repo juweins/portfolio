@@ -7,6 +7,7 @@ pub struct KafkaConfig {
     pub bootstrap_servers: String,
     pub group_id: String,
     pub message_timeout_ms: u32,
+    pub connection_max_idle_ms: u32,
 }
 
 // struct for the azure_key.json file
