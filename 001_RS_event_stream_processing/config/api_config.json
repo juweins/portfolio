@@ -1,0 +1,20 @@
+{
+    "exchangerates_api": {
+        "url": "https://apilayer.com/marketplace/exchangerates_data-api",
+        "apikey": "abcdefghijklmnopqrstuvwxyz",
+        "description": "This is api for retrieving exchange rates",
+        "category": "prod"
+    },
+    "tankerkoenig_api": {
+        "url": "https://creativecommons.tankerkoenig.de",
+        "apikey": "abcdefghijklmnopqrstuvwxyz",
+        "description": "This is a api for retrieving gas station prices",
+        "category": "prod"
+    },
+    "test_api": {
+        "url": "https://catfact.ninja/fact",
+        "apikey": "",
+        "description": "This is a test api for the purpose of testing the api module",
+        "category": "test"
+    }
+}

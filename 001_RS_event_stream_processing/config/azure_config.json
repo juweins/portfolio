@@ -1,0 +1,6 @@
+{
+    "storage_account_name": "<storageaccount>",
+    "storage_account_key": "<key>",
+    "storage_container": "storage-inbound",
+    "storage_blob_name": "blob-storage-inbound"
+}
